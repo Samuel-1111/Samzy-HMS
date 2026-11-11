@@ -4,13 +4,13 @@ import { hospital } from "@/lib/hospital";
 
 const services = [
   { icon: "✚", title: "Laboratory Services", text: "Comprehensive diagnostic testing to support accurate and timely clinical decisions." },
-  { icon: "♡", title: "Maternity & Gynaecology", text: "Antenatal, childbirth and postnatal support, alongside gynaecological care." },
-  { icon: "⌕", title: "Ultrasound Scanning", text: "Diagnostic ultrasound imaging for a range of medical and pregnancy-related needs." },
-  { icon: "♧", title: "Family & Child Health", text: "Preventive care, immunisation and wellness support for children and families." },
-  { icon: "⚕", title: "Medical & Surgical Care", text: "Medical consultations and surgical services delivered by the hospital care team." },
-  { icon: "＋", title: "Emergency Care", text: "Emergency services for patients who need prompt medical attention." },
-  { icon: "◈", title: "Specialist Consultations", text: "Specialist consultations including gynaecology, paediatrics, endocrinology, orthopaedics and urology." },
-  { icon: "♡", title: "Fertility & ART", text: "Assisted reproductive services including IVF, ICSI, IUI and fertility preservation." },
+  { icon: "♡", title: "Maternity and Gyne Care", text: "Maternity and gynaecological services, including prenatal care, childbirth education and postnatal support." },
+  { icon: "⌕", title: "Ultra Sound Scanning", text: "Ultrasound scanning services that provide crucial imaging for various medical conditions, including pregnancy." },
+  { icon: "♧", title: "Family and Child Health Care", text: "Care focused on family and child health, including preventive care, immunisations and wellness check-ups." },
+  { icon: "⚕", title: "Medical and Surgical Services", text: "Medical and surgical services, from routine procedures to complex surgeries." },
+  { icon: "＋", title: "Emergency Care Services", text: "Emergency care for patients who need immediate medical attention and rapid response." },
+  { icon: "◈", title: "Specialist Consultation Services", text: "Specialist consultations including gynaecology, endocrinology, paediatrics, orthopaedics, urology and others." },
+  { icon: "♡", title: "Artificial Reproductive Technique (ART)", text: "Advanced ART procedures, including IVF, ICSI, IUI and fertility preservation care." },
 ];
 
 const portals = [
@@ -52,13 +52,13 @@ export default function Home() {
       <section className="coxwell-hero">
         <div className="coxwell-hero-copy">
           <span className="public-hms-kicker"><i /> YOUR HEALTH, OUR PRIORITY</span>
-          <h1>Compassionate care.<br /><em>Specialist expertise.</em></h1>
-          <p className="coxwell-hero-lead">We are committed to delivering affordable, professional and compassionate healthcare for individuals and families.</p>
+          <h1>Your Health,<br /><em>Our Priority.</em></h1>
+          <p className="coxwell-hero-lead">We are committed to the highest standards of affordable healthcare for every community.</p>
           <div className="coxwell-hero-actions">
             <a className="coxwell-primary" href="https://coxwellhospital.com/appointment/">Request an appointment <span>↗</span></a>
             <a className="coxwell-secondary" href="tel:+2348102599983">Call the hospital <span>+234 810 259 9983</span></a>
           </div>
-          <div className="coxwell-hero-proof"><span>✚ Patient-centred care</span><span>◈ Specialist services</span><span>♡ Family health</span></div>
+          <div className="coxwell-hero-proof"><span>✚ Patient-centred care</span><span>◈ Specialist services</span><span>♡ Family health</span><span>24/7 help line</span></div>
         </div>
         <div className="coxwell-hero-visual" aria-label="Coxwell Specialist Hospital">
           <img className="coxwell-building-photo" src="https://coxwellhospital.com/_nuxt/hospital-building-view.CuHOeUg9.webp" alt="Coxwell Specialist Hospital building" />
@@ -78,8 +78,8 @@ export default function Home() {
       <section className="public-hms-section coxwell-about" id="about">
         <div className="coxwell-section-intro">
           <span className="public-hms-kicker">ABOUT COXWELL</span>
-          <h2>Healthcare built on<br /><em>trust and compassion.</em></h2>
-          <p>Our commitment is to make quality healthcare more accessible through professional service, modern tools and a caring approach to every patient.</p>
+          <h2>Medical Professionals<br /><em>dedicated to your well-being.</em></h2>
+          <p>At Coxwell Specialist Hospital, our team of highly skilled professionals deliver the highest standard of affordable and personalised medical services for you and your family, ensuring that everyone has access to quality care.</p>
           <a href="https://coxwellhospital.com/about/" target="_blank" rel="noreferrer" className="coxwell-inline-link">Read more about the hospital ↗</a>
         </div>
         <div className="coxwell-about-panels">
@@ -91,11 +91,21 @@ export default function Home() {
 
       <section className="public-hms-section coxwell-services" id="services">
         <div className="coxwell-services-head">
-          <div><span className="public-hms-kicker">OUR MEDICAL SERVICES</span><h2>Care for every stage<br /><em>of your health journey.</em></h2></div>
-          <p>Explore the healthcare services publicly listed by Coxwell Specialist Hospital. Contact the hospital to confirm clinic schedules and service availability.</p>
+          <div><span className="public-hms-kicker">OUR MEDICAL SERVICES</span><h2>Comprehensive Services<br /><em>for your well-being.</em></h2></div>
+          <p>Discover a wide range of medical services, from routine check-ups to specialised treatment. Contact the hospital to confirm clinic schedules and service availability.</p>
         </div>
         <div className="coxwell-service-grid">
           {services.map((service, index) => <article key={service.title}><span className="coxwell-service-icon">{service.icon}</span><small>0{index + 1}</small><h3>{service.title}</h3><p>{service.text}</p></article>)}
+        </div>
+      </section>
+
+      <section className="coxwell-trust-section">
+        <div><span className="public-hms-kicker">WHY CHOOSE COXWELL</span><h2>Care you can trust.<br /><em>Expertise you can rely on.</em></h2></div>
+        <div className="coxwell-trust-grid">
+          <article><b>Patient-Centered Care</b><p>Care that prioritises the needs and wellbeing of every patient.</p></article>
+          <article><b>Cutting-Edge Medical Technology</b><p>Modern tools and digital technology to enhance the patient experience.</p></article>
+          <article><b>Experienced Healthcare Team</b><p>Medical professionals and expert consultants across specialist services.</p></article>
+          <article><b>HMO Support</b><p>Hospital support for patients using health insurance firms.</p></article>
         </div>
       </section>
 
