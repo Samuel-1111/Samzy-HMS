@@ -361,3 +361,23 @@ html[data-theme="dark"] .login-form .login-password-toggle{background:#203448;bo
 .hms-cctv-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding-top:15px;border-top:1px solid #e8eef2}.hms-cctv-bottom>div{display:grid;gap:4px}.hms-cctv-bottom b{font-size:11px;color:#26465b}.hms-cctv-bottom small{font-size:9px;color:#8293a0}
 @media(max-width:700px){.hms-toolbar-actions{width:100%;justify-content:flex-start}.hms-toolbar-actions .hms-primary{flex:1}.hms-cctv-discovery{grid-template-columns:1fr;padding:18px}.hms-cctv-radar{width:150px;height:150px}.hms-cctv-radar-core{width:48px;height:48px}.hms-cctv-bottom{align-items:flex-start;flex-direction:column}.hms-cctv-found article{align-items:flex-start}.hms-cctv-found article button{font-size:8px}}
 @media(max-width:480px){.hms-modal-backdrop{padding:10px}.hms-modal-card{max-height:94vh;padding:18px;border-radius:13px}.hms-modal-card .hms-data-form{grid-template-columns:1fr}.hms-modal-card .hms-form-actions{flex-wrap:wrap}.hms-modal-card .hms-form-actions button{flex:1}.hms-cctv-found article{flex-wrap:wrap}.hms-cctv-found article>div{min-width:calc(100% - 55px)}.hms-cctv-found article button{margin-left:47px}}
+
+/* Department presets and secure environment-driven portal account cards. */
+.hms-department-suggestions{grid-column:1/-1;padding:13px;border:1px solid #e1eaf0;border-radius:10px;background:#f7fafc}
+.hms-department-suggestions>b{display:block;margin-bottom:10px;font-size:10px;color:#476174}
+.hms-department-suggestions>div{display:flex;flex-wrap:wrap;gap:6px}
+.hms-department-suggestions button{padding:7px 9px;border:1px solid #d8e5ec;border-radius:20px;background:#fff;color:#32637f;font-size:9px;font-weight:700}
+.hms-department-suggestions button:hover{border-color:#77abc5;background:#edf7fb}
+.hms-department-suggestions small{display:block;margin-top:9px;color:#8495a1;font-size:9px}
+.hms-account-env-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:15px}
+.hms-account-env-card{display:grid;gap:10px;padding:17px;border:1px solid #e3ebf0;border-radius:11px;background:#fbfdfe}
+.hms-account-env-card>div{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.hms-account-env-card>b,.hms-account-env-card>div>b{font-size:12px;color:#24465c}
+.hms-account-env-card p{margin:0;color:#718594;font-size:10px;line-height:1.8;overflow-wrap:anywhere}
+.hms-account-env-card code{padding:2px 4px;border-radius:4px;background:#eef3f6;color:#2c5d78;font-size:9px}
+.hms-account-env-card small{font-size:9px;color:#8595a1}
+.hms-env-state{justify-self:start;padding:6px 8px;border-radius:20px;background:#fff4e7;color:#a56c22;font-size:8px;font-weight:900;letter-spacing:.08em}
+.hms-env-state.is-ready{background:#e9f7ef;color:#218456}
+.hms-env-instructions{display:grid;gap:10px;margin:14px 0;padding-left:22px;color:#536d7f;font-size:11px;line-height:1.7}
+.hms-env-instructions code{padding:2px 5px;border-radius:4px;background:#edf3f6;color:#285d7a;font-size:10px}
+@media(max-width:650px){.hms-account-env-grid{grid-template-columns:1fr}.hms-account-env-card>div{flex-direction:column}}
