@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getPortalAccountSetupStatus } from "@/app/actions";
 
 type SetupStatus = {
@@ -22,13 +22,13 @@ export function AccountManager() {
   const [status, setStatus] = useState<SetupStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  async function refresh() {
+  const refresh = useCallback(async () => {
     setLoading(true); setError("");
     try { setStatus(await getPortalAccountSetupStatus() as SetupStatus); }
     catch (e) { setError(e instanceof Error ? e.message : "Unable to verify portal setup."); }
     finally { setLoading(false); }
-  }
-  useEffect(() => { void refresh(); }, []);
+  }, []);
+  useEffect(() => { void refresh(); }, [refresh]);
   return <div className="hms-module-page">
     <section className="hms-module-intro"><div><span className="hms-eyebrow">ADMINISTRATION · ACCESS CONTROL</span><h2>Portal accounts & credentials</h2><p>Each portal has one Vercel environment-variable credential pair. Password values are never displayed in this dashboard.</p></div><span className="hms-module-icon">♙</span></section>
     {error && <div className="hms-notice hms-notice-error" role="alert">{error}</div>}
