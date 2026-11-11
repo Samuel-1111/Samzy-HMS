@@ -147,3 +147,7 @@ html[data-theme="dark"] .hms-data-form input,html[data-theme="dark"] .hms-data-f
 .hms-account-warning{grid-column:1/-1;padding:12px;border-radius:9px;background:rgba(234,179,8,.12);color:#92400e;font-size:13px}
 .hms-account-empty{padding:28px;text-align:center;color:var(--muted,#64748b)}
 @media(max-width:640px){.hms-account-issued{grid-template-columns:1fr}.hms-account-issued>div{grid-column:auto}.hms-account-issued button{width:100%}}
+
+.hms-account-actions{display:flex;flex-wrap:wrap;gap:6px}
+.hms-account-actions button{padding:6px 9px;border:1px solid var(--border,#dbe2ea);border-radius:7px;background:var(--surface,#fff);color:inherit;font-size:11px;font-weight:700;cursor:pointer}
+.hms-account-actions button:hover{border-color:var(--accent,#2563eb)}
