@@ -23,7 +23,7 @@ export async function loadWorkspaceRecords(moduleId:string){
  switch(moduleId){
   case "departments": {const {data,error}=await supabase.from("departments").select("id,name,code,description,is_active,created_at").eq("hospital_id",hospitalId).order("name").limit(limit);if(error)throw new Error(error.message);return data??[];}
   case "staff": {if(role!=="admin"&&role!=="receptionist")throw new Error("Not authorised.");const {data,error}=await supabase.from("staff_directory").select("id,full_name,staff_number,job_title,phone,email,is_active,department_id").eq("hospital_id",hospitalId).order("full_name").limit(limit);if(error)throw new Error(error.message);return data??[];}
-  case "patients": {if(role==="patient"){const {data,error}=await supabase.from("patients").select("id,patient_number,first_name,middle_name,last_name,phone,email,patient_category,record_status,date_of_birth,sex").eq("hospital_id",hospitalId).eq("auth_user_id",(await supabase.auth.getUser()).data.user!.id).limit(1);if(error)throw new Error(error.message);return data??[];}const {data,error}=await supabase.from("patients").select("id,patient_number,first_name,middle_name,last_name,phone,email,patient_category,record_status,date_of_birth,sex,created_at").eq("hospital_id",hospitalId).order("created_at",{ascending:false}).limit(limit);if(error)throw new Error(error.message);return data??[];}
+  case "patients": {const {data,error}=await supabase.from("patients").select("id,patient_number,first_name,middle_name,last_name,phone,email,patient_category,record_status,date_of_birth,sex,created_at").eq("hospital_id",hospitalId).order("created_at",{ascending:false}).limit(limit);if(error)throw new Error(error.message);return data??[];}
   case "appointments": {const q=supabase.from("appointments").select("id,patient_id,department_id,requested_at,scheduled_at,reason,status,receptionist_notes").eq("hospital_id",hospitalId).order("requested_at",{ascending:false}).limit(limit);const {data,error}=await q;if(error)throw new Error(error.message);return data??[];}
   case "cctv": {if(role!=="admin")throw new Error("Only Admin can manage CCTV inventory.");const {data,error}=await supabase.from("cctv_cameras").select("id,camera_name,location_label,integration_type,external_camera_id,is_enabled,created_at").eq("hospital_id",hospitalId).order("created_at",{ascending:false}).limit(limit);if(error)throw new Error(error.message);return data??[];}
   case "messages": {if(role!=="admin"&&role!=="receptionist"&&role!=="patient")throw new Error("Not authorised.");const {data,error}=await supabase.from("patient_messages").select("id,patient_id,sender_type,message,created_at,read_at").eq("hospital_id",hospitalId).order("created_at",{ascending:false}).limit(limit);if(error)throw new Error(error.message);return data??[];}
@@ -61,7 +61,10 @@ export async function createWorkspaceRecord(moduleId:string,values:FormValues){
  }else if(moduleId==="appointments"){
   if(role!=="admin"&&role!=="receptionist")throw new Error("Only Reception or Admin can schedule appointments.");
   if(!val("patient_id")||!val("reason"))throw new Error("Patient ID and appointment reason are required.");
-  const {error}=await supabase.from("appointments").insert({hospital_id:hospitalId,patient_id:val("patient_id"),department_id:optional("department_id"),scheduled_at:optional("scheduled_at"),reason:val("reason"),status:"requested",created_by:user.id});
+  const {data:patient,error:patientError}=await supabase.from("patients").select("id").eq("hospital_id",hospitalId).eq("id",val("patient_id")).maybeSingle();
+  if(patientError||!patient)throw new Error("Select a valid patient from this hospital.");
+  if(val("department_id")){const {data:department}=await supabase.from("departments").select("id").eq("hospital_id",hospitalId).eq("id",val("department_id")).maybeSingle();if(!department)throw new Error("Select a valid department from this hospital.");}
+  const {error}=await supabase.from("appointments").insert({hospital_id:hospitalId,patient_id:val("patient_id"),department_id:optional("department_id"),scheduled_at:optional("scheduled_at"),reason:val("reason"),status:"requested",created_by:actorUserId});
   if(error)throw new Error(error.message);
  }else if(moduleId==="cctv"){
   if(role!=="admin")throw new Error("Only Admin can register CCTV equipment.");
@@ -80,7 +83,7 @@ export async function createWorkspaceRecord(moduleId:string,values:FormValues){
  }else if(moduleId==="messages"){
   if(role!=="admin"&&role!=="receptionist")throw new Error("Only Reception can manage patient messages.");
   if(!val("patient_id")||!val("message"))throw new Error("Patient ID and message are required.");
-  const sender=role==="patient"?"patient":"receptionist";
+  const sender="receptionist";
   const {data:patient}=await supabase.from("patients").select("id").eq("hospital_id",hospitalId).eq("id",val("patient_id")).maybeSingle();if(!patient)throw new Error("Select a valid patient from this hospital.");
   const {error}=await supabase.from("patient_messages").insert({hospital_id:hospitalId,patient_id:val("patient_id"),sender_type:sender,sender_user_id:actorUserId,message:val("message")});
   if(error)throw new Error(error.message);
