@@ -1,5 +1,6 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
+import {useCallback,useEffect,useMemo,useState} from "react";
+import {AccountManager} from "@/components/AccountManager";
 import {loadWorkspaceRecords,createWorkspaceRecord} from "@/app/workspace-actions";
 import Link from "next/link";
 import {signOut} from "@/app/actions";
@@ -11,7 +12,8 @@ const admin:Mod[]=[
 {id:"patients",label:"Patients",icon:"♙",description:"Registration, identity, demographics, next of kin and patient profiles.",group:"Clinical Operations",actions:["Register patient","Find patient"]},
 {id:"appointments",label:"Appointments",icon:"▦",description:"Review requests, approve, reschedule, decline and manage arrivals.",group:"Clinical Operations",actions:["Review requests","Schedule appointment"]},
 {id:"departments",label:"Departments",icon:"▤",description:"Create and manage departments used throughout the system.",group:"Clinical Operations",actions:["Add department"]},
-{id:"staff",label:"Staff Directory",icon:"♧",description:"Manage staff directory, roles, assignments and account access.",group:"Administration",actions:["Add staff member"]},
+{id:"staff",label:"Staff Directory",icon:"♧",description:"Manage the hospital staff directory and assignments.",group:"Administration",actions:["Add staff member"]},
+{id:"accounts",label:"User Accounts",icon:"♙",description:"Create individual Reception accounts and manage the single shared Staff Portal account.",group:"Administration"},
 {id:"queues",label:"Patient Queues",icon:"☷",description:"Monitor live department queues and patient movement.",group:"Clinical Operations"},
 {id:"records",label:"Medical Records",icon:"▣",description:"Access authorised clinical records, encounters and amendments.",group:"Clinical Operations"},
 {id:"referrals",label:"Referrals",icon:"↗",description:"Create, route, receive and track department referrals.",group:"Clinical Operations"},
@@ -113,10 +115,11 @@ function displayValue(row:Record<string,unknown>,key:string){const v=row[key];if
 function ModulePage({kind,module,notice}:{kind:Kind;module:Mod;notice:(s:string)=>void}){
  const [term,setTerm]=useState(""),[rows,setRows]=useState<Record<string,unknown>[]>([]),[loading,setLoading]=useState(false),[saving,setSaving]=useState(false),[error,setError]=useState(""),[success,setSuccess]=useState(""),[form,setForm]=useState<Record<string,string>>({});
  const fields=fieldsFor(kind,module.id),supported=Boolean(columns[module.id]);
- async function refresh(){if(!supported)return;setLoading(true);setError("");try{setRows(await loadWorkspaceRecords(module.id) as Record<string,unknown>[]);}catch(e){setError(e instanceof Error?e.message:"Unable to load hospital records.");}finally{setLoading(false);}}
- useEffect(()=>{setTerm("");setForm({});setSuccess("");setError("");void refresh();},[module.id]);
+ const refresh=useCallback(async()=>{if(!supported)return;setLoading(true);setError("");try{setRows(await loadWorkspaceRecords(module.id) as Record<string,unknown>[]);}catch(e){setError(e instanceof Error?e.message:"Unable to load hospital records.");}finally{setLoading(false);}},[supported,module.id]);
+ useEffect(()=>{setTerm("");setForm({});setSuccess("");setError("");void refresh();},[module.id,refresh]);
  async function submit(e:React.FormEvent<HTMLFormElement>){e.preventDefault();setSaving(true);setError("");setSuccess("");try{const result=await createWorkspaceRecord(module.id,form);setSuccess(result.message);setForm({});await refresh();}catch(e){setError(e instanceof Error?e.message:"Unable to save record.");}finally{setSaving(false);}}
  const filtered=rows.filter(row=>Object.values(row).some(v=>String(v??"").toLowerCase().includes(term.toLowerCase())));
+ if(module.id==="accounts"&&kind==="admin") return <AccountManager/>;
 
  return <div className="hms-module-page"><section className="hms-module-intro"><div><span className="hms-eyebrow">{module.group.toUpperCase()}</span><h2>{module.label}</h2><p>{module.description}</p></div><span className="hms-module-icon">{module.icon}</span></section>
  {module.id==="settings"?<section className="hms-panel"><div className="hms-panel-heading"><div><h3>Workspace configuration</h3><p>Configuration tools are enabled as the hospital is provisioned.</p></div></div><div className="hms-settings-grid">{["Hospital profile","Departments & services","User access & roles","Patient ID settings","Notifications","Security & audit","Clinical workflows","Data retention & privacy","Backup & recovery","Appearance"].map((v,i)=><button key={v} onClick={()=>notice(v+": hospital configuration and approvals are required.")}><span>{["✚","▤","♙","▣","♢","◈","☷","⌑","⟳","◐"][i]}</span><b>{v}</b><small>Workspace configuration</small><i>→</i></button>)}</div></section>
