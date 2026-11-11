@@ -2420,6 +2420,8 @@ export type Database = {
           hospital_id: string
           id: string
           is_active: boolean
+          login_username: string | null
+          must_change_password: boolean
           phone: string | null
           role: string
           updated_at: string
@@ -2432,6 +2434,8 @@ export type Database = {
           hospital_id: string
           id?: string
           is_active?: boolean
+          login_username?: string | null
+          must_change_password?: boolean
           phone?: string | null
           role: string
           updated_at?: string
@@ -2444,6 +2448,8 @@ export type Database = {
           hospital_id?: string
           id?: string
           is_active?: boolean
+          login_username?: string | null
+          must_change_password?: boolean
           phone?: string | null
           role?: string
           updated_at?: string
