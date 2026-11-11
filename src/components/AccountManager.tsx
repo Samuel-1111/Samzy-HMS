@@ -43,7 +43,7 @@ export function AccountManager() {
       <div className="hms-panel-heading"><div><span className="hms-eyebrow">WORKSPACE READINESS</span><h3>Hospital services configuration</h3><p>These services are separate from portal login credentials.</p></div></div>
       <div className="hms-account-env-grid">
         <article className="hms-account-env-card"><b>Hospital database workspace</b><span className={status?.hospitalWorkspaceConfigured?"hms-env-state is-ready":"hms-env-state"}>{status?.hospitalWorkspaceConfigured?"ID CONFIGURED":"NOT CONFIGURED"}</span><p>Required server variable: <code>HMS_HOSPITAL_ID</code></p></article>
-        <article className="hms-account-env-card"><b>CCTV local discovery bridge</b><span className={status?.cctvBridgeConfigured?"hms-env-state is-ready":"hms-env-state"}>{status?.cctvBridgeConfigured?"BRIDGE CONFIGURED":"BRIDGE NOT CONNECTED"}</span><p>Required variables: <code>CCTV_DISCOVERY_BRIDGE_URL</code> and <code>CCTV_DISCOVERY_BRIDGE_TOKEN</code></p></article>
+        <article className="hms-account-env-card"><b>CCTV local discovery bridge</b><span className={status?.cctvBridgeConfigured?"hms-env-state is-ready":"hms-env-state"}>{status?.cctvBridgeConfigured?"URL & TOKEN SET":"BRIDGE NOT CONFIGURED"}</span><p>Required variables: <code>CCTV_DISCOVERY_BRIDGE_URL</code> and <code>CCTV_DISCOVERY_BRIDGE_TOKEN</code></p></article>
       </div>
     </section>
     <section className="hms-panel">
