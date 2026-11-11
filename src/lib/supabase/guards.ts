@@ -1,14 +1,19 @@
 import { redirect } from "next/navigation";
-import { getAdminSession } from "@/lib/auth/admin-session";
+import { getPortalSession, type PortalRole } from "@/lib/auth/admin-session";
 
-export type AppRole = "admin" | "receptionist" | "staff" | "patient";
+export type AppRole = PortalRole;
 
 export async function requireRole(allowedRoles: AppRole[]) {
-  const session = await getAdminSession();
+  const session = await getPortalSession(allowedRoles);
   if (!session) redirect("/login");
-  if (!allowedRoles.includes("admin") || !allowedRoles.includes(session.role)) redirect("/unauthorized");
+  const names: Record<PortalRole, string> = {
+    admin: "Administrator",
+    receptionist: "Receptionist",
+    staff: "Staff",
+    patient: "Patient",
+  };
   return {
-    user: { id: session.username, app_metadata: { role: "admin" as const } },
-    profile: { display_name: session.username, is_active: true, role: "admin" as const },
+    user: { id: session.username, app_metadata: { role: session.role } },
+    profile: { display_name: names[session.role], is_active: true, role: session.role },
   };
 }
