@@ -7,15 +7,14 @@ type Role="admin"|"receptionist"|"staff"|"patient";
 type FormValues=Record<string,string|boolean|undefined>;
 async function context(allowed:Role[]){
  const session=await getPortalSession(allowed);
- if(!session) throw new Error("Your portal session has expired. Sign in again.");
- if(session.role==="patient") throw new Error("Individual patient identity has not been configured. Patient records remain locked until individual patient accounts are provisioned.");
- const hospitalId=process.env.HMS_HOSPITAL_ID?.trim()||"";
- if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(hospitalId)) throw new Error("Hospital workspace is not configured. Set HMS_HOSPITAL_ID in Vercel after the hospital tenant has been formally provisioned.");
+ if(!session) throw new Error("Your portal session has expired or your account is inactive. Sign in again.");
+ if(session.role==="patient") throw new Error("Patient workspace access remains locked until individual patient workflows are enabled.");
+ const hospitalId=session.hospitalId;
  const supabase=createAdminClient();
  const {data:hospital,error:hospitalError}=await supabase.from("hospitals").select("id,status").eq("id",hospitalId).maybeSingle();
  if(hospitalError) throw new Error("Unable to verify the hospital workspace: "+hospitalError.message);
- if(!hospital||hospital.status!=="active") throw new Error("The configured hospital workspace does not exist or is suspended. No records were changed.");
- return {supabase,actorUserId:null as string|null,role:session.role,hospitalId};
+ if(!hospital||hospital.status!=="active") throw new Error("Your hospital workspace is inactive or unavailable. No records were changed.");
+ return {supabase,actorUserId:session.userId,role:session.role,hospitalId};
 }
 export async function loadWorkspaceRecords(moduleId:string){
  const {supabase,hospitalId,role}=await context(["admin","receptionist","staff"]);
