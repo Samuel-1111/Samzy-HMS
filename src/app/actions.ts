@@ -1,8 +1,13 @@
 "use server";
 
-import { randomBytes, timingSafeEqual } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
-import { clearAdminSession, createAdminSession, getAdminSession, verifyAdminCredentials } from "@/lib/auth/admin-session";
+import { clearAdminSession, createAdminSession, verifyAdminCredentials } from "@/lib/auth/admin-session";
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+const destinations: Record<string, string> = { admin: "/admin", receptionist: "/reception", staff: "/staff", patient: "/patient" };
+const internalAuthEmail = (username: string) => username.toLowerCase() + "@accounts.samzy-hms.invalid";
 
 export async function signInPortal(username: string, password: string) {
   const value = username.trim();
