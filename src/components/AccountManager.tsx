@@ -1,6 +1,6 @@
 "use client";
 import {useCallback,useEffect,useState} from "react";
-import {createPortalAccount,listPortalAccounts} from "@/app/actions";
+import {createPortalAccount,listPortalAccounts,managePortalAccount} from "@/app/actions";
 
 type Account={id:string;display_name:string;login_username:string|null;role:string;email:string|null;phone:string|null;is_active:boolean;must_change_password:boolean;created_at:string};
 export function AccountManager(){
@@ -28,6 +28,15 @@ export function AccountManager(){
   }catch(e){setError(e instanceof Error?e.message:"Account creation failed.");}
   finally{setBusy(false);}
  }
+ async function manage(profileId:string,operation:"reset_password"|"suspend"|"reactivate"){
+  setError("");setSuccess("");setIssued(null);
+  try{
+   const result=await managePortalAccount({profileId,operation});
+   if("temporaryPassword" in result) setIssued({username:result.username,temporaryPassword:result.temporaryPassword,role:"account"});
+   setSuccess(operation==="reset_password"?"New temporary password generated. Share it securely; the user must change it at next login.":operation==="suspend"?"Account suspended.":"Account reactivated.");
+   await refresh();
+  }catch(e){setError(e instanceof Error?e.message:"Account update failed.");}
+ }
  const staffExists=accounts.some(a=>a.role==="staff");
  return <div className="hms-module-page">
   <section className="hms-module-intro"><div><span className="hms-eyebrow">ADMINISTRATION · ACCESS CONTROL</span><h2>User & account management</h2><p>Create Receptionist accounts individually and provision exactly one shared Staff Portal account.</p></div><span className="hms-module-icon">♙</span></section>
@@ -47,7 +56,7 @@ export function AccountManager(){
    </form>
   </section>
   <section className="hms-panel hms-table-panel"><div className="hms-panel-heading"><div><h3>Existing portal accounts</h3><p>{loading?"Loading accounts…":accounts.length+" account(s) registered"}</p></div><button className="hms-filter" type="button" onClick={()=>void refresh()}>↻ Refresh</button></div>
-   {accounts.length===0&&!loading?<div className="hms-account-empty">No portal accounts have been provisioned yet.</div>:<div className="hms-table-wrap"><table className="hms-table"><thead><tr><th>NAME</th><th>USERNAME</th><th>ROLE</th><th>CONTACT</th><th>STATUS</th></tr></thead><tbody>{accounts.map(a=><tr key={a.id}><td>{a.display_name}</td><td>{a.login_username??"—"}</td><td>{a.role}</td><td>{a.email??a.phone??"—"}</td><td>{!a.is_active?"Suspended":a.must_change_password?"Password change required":"Active"}</td></tr>)}</tbody></table></div>}
+   {accounts.length===0&&!loading?<div className="hms-account-empty">No portal accounts have been provisioned yet.</div>:<div className="hms-table-wrap"><table className="hms-table"><thead><tr><th>NAME</th><th>USERNAME</th><th>ROLE</th><th>CONTACT</th><th>STATUS</th><th>ACTIONS</th></tr></thead><tbody>{accounts.map(a=><tr key={a.id}><td>{a.display_name}</td><td>{a.login_username??"—"}</td><td>{a.role}</td><td>{a.email??a.phone??"—"}</td><td>{!a.is_active?"Suspended":a.must_change_password?"Password change required":"Active"}</td><td>{a.role!=="admin"&&<div className="hms-account-actions"><button type="button" onClick={()=>void manage(a.id,"reset_password")}>Reset password</button><button type="button" onClick={()=>void manage(a.id,a.is_active?"suspend":"reactivate")}>{a.is_active?"Suspend":"Reactivate"}</button></div>}</td></tr>)}</tbody></table></div>}
   </section>
   <p className="hms-data-note">Security: passwords are managed by Supabase Auth and are never stored in the HMS profile table. Admin account creation is audited. Shared Staff access does not prove which individual staff member performed an action.</p>
  </div>;
