@@ -421,3 +421,22 @@ html[data-theme="dark"] .login-form .login-password-toggle{background:#203448;bo
 .hms-cctv-found article button:first-of-type{border-color:#b8d8e7;background:#eaf6fb;color:#145f85}
 .hms-cctv-found article button:disabled{opacity:.6;cursor:wait}
 .hms-cctv-found article button+button{border-color:#dfe7ec;background:#fff;color:#4d6879}
+
+/* Demo preview and refined portal card hierarchy. */
+.hms-demo-banner{display:flex;align-items:center;gap:14px;margin:0 0 16px;padding:14px 17px;border:1px solid #b8d9ed;border-radius:13px;background:linear-gradient(110deg,#eaf6ff 0%,#f3f0ff 55%,#f0fbf7 100%);color:#173c59;box-shadow:0 8px 24px rgba(25,79,116,.07)}
+.hms-demo-banner>span{flex:none;padding:7px 10px;border-radius:8px;background:#176da8;color:#fff;font-size:9px;font-weight:900;letter-spacing:.12em}
+.hms-demo-banner>div{display:grid;gap:4px;min-width:0;flex:1}
+.hms-demo-banner b{font-size:12px;color:#153c59}
+.hms-demo-banner small{font-size:10px;line-height:1.5;color:#547187}
+.hms-demo-banner button{flex:none;border:1px solid #c6dbe9;border-radius:8px;padding:8px 11px;background:#fff;color:#245d7c;font-size:10px;font-weight:800}
+.hms-demo-banner button:hover{background:#e4f3fc;border-color:#8bbbd8}
+.hms-stat{position:relative;overflow:hidden;background:linear-gradient(145deg,#fff 0%,#f6fbff 100%);border-color:#dceaf3;box-shadow:0 7px 22px rgba(24,67,96,.055)}
+.hms-stat:after{content:"";position:absolute;right:-22px;bottom:-38px;width:104px;height:104px;border-radius:50%;background:rgba(23,109,168,.055)}
+.hms-panel{border-color:#e1eaf0;box-shadow:0 8px 26px rgba(25,58,83,.045)}
+.hms-panel-heading h3{letter-spacing:-.02em}
+.hms-shortcuts button{border:1px solid #e3edf3;border-radius:10px;background:linear-gradient(120deg,#fff,#f7fbfe);transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.hms-shortcuts button:hover{transform:translateY(-2px);border-color:#9fc9df;box-shadow:0 8px 18px rgba(22,92,133,.09)}
+.hms-module-intro{background:linear-gradient(115deg,#eaf5ff 0%,#f3f0ff 58%,#effaf7 100%);border:1px solid #d9e9f3;border-radius:15px}
+.hms-primary{box-shadow:0 5px 12px rgba(23,109,168,.14)}
+.hms-data-form input:focus,.hms-data-form select:focus,.hms-data-form textarea:focus,.hms-toolbar>label:focus-within{outline:3px solid rgba(23,109,168,.12);border-color:#4c9ac5}
+@media(max-width:620px){.hms-demo-banner{align-items:flex-start;flex-wrap:wrap}.hms-demo-banner>div{min-width:calc(100% - 120px)}.hms-demo-banner button{margin-left:auto}}
