@@ -29,12 +29,12 @@ if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
 }
 
 const tagText = (xml, tag) => {
-  const match = xml.match(new RegExp("<(?:[\\w.-]+:)?"+tag+"(?:\\s[^>]*)?>([\\s\\S]*?)</(?:[\\w.-]+:)?"+tag+"\\s*>", "i"));
-  return match?.[1]?.replace(/<[^>]*>/g, " ").replace(/\\s+/g, " ").trim() ?? "";
+  const match = xml.match(new RegExp("<(?:[\\w.-]+:)?"+tag+"(?:\s[^>]*)?>([\s\\S]*?)</(?:[\\w.-]+:)?"+tag+"\s*>", "i"));
+  return match?.[1]?.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() ?? "";
 };
 function extractScopes(xml) {
   const raw = tagText(xml, "Scopes");
-  return raw.split(/\\s+/).filter(Boolean).map((scope) => {
+  return raw.split(/\s+/).filter(Boolean).map((scope) => {
     try { return decodeURIComponent(scope); } catch { return scope; }
   });
 }
@@ -86,16 +86,16 @@ async function discover() {
     socket.on("error", (error) => { clearTimeout(timer); reject(error); });
     socket.on("message", (message) => {
       const xml = message.toString("utf8");
-      const xaddrs = tagText(xml, "XAddrs").split(/\\s+/).filter(Boolean);
+      const xaddrs = tagText(xml, "XAddrs").split(/\s+/).filter(Boolean);
       const scopes = extractScopes(xml);
       for (const xaddr of xaddrs) {
         try {
           const endpoint = new URL(xaddr);
           if (!["http:", "https:"].includes(endpoint.protocol)) continue;
-          const host = endpoint.hostname.replace(/^\\[|\\]$/g, "");
-          const nameScope = scopes.find((scope) => /\\/name\\//i.test(scope));
-          const hardwareScope = scopes.find((scope) => /\\/hardware\\//i.test(scope));
-          const manufacturerScope = scopes.find((scope) => /\\/hardware\\//i.test(scope));
+          const host = endpoint.hostname.replace(/^\[|\]$/g, "");
+          const nameScope = scopes.find((scope) => /\/name\//i.test(scope));
+          const hardwareScope = scopes.find((scope) => /\/hardware\//i.test(scope));
+          const manufacturerScope = scopes.find((scope) => /\/hardware\//i.test(scope));
           const id = createHash("sha256").update(endpoint.origin + endpoint.pathname).digest("hex").slice(0, 24);
           results.set(id, {
             id,
@@ -129,7 +129,7 @@ async function discover() {
 }
 async function tcpReachable(camera) {
   const endpoint = new URL(camera.xaddr);
-  const host = endpoint.hostname.replace(/^\\[|\\]$/g, "");
+  const host = endpoint.hostname.replace(/^\[|\]$/g, "");
   const port = Number(endpoint.port || (endpoint.protocol === "https:" ? 443 : 80));
   const resolved = await dns.lookup(host, { all: true });
   if (!resolved.length || resolved.some((item) => !privateAddress(item.address))) {
