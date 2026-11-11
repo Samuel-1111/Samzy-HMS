@@ -11,8 +11,9 @@ async function context(allowed:Role[]){
  const role=user.app_metadata?.role as Role|undefined;
  const hospitalId=user.app_metadata?.hospital_id as string|undefined;
  if(!role||!hospitalId||!allowed.includes(role)) throw new Error("You do not have permission to perform this action.");
- const {data:profile}=await supabase.from("user_profiles").select("is_active,role,hospital_id").eq("auth_user_id",user.id).maybeSingle();
+ const {data:profile}=await supabase.from("user_profiles").select("is_active,role,hospital_id,must_change_password").eq("auth_user_id",user.id).maybeSingle();
  if(!profile?.is_active||profile.role!==role||profile.hospital_id!==hospitalId) throw new Error("Your account is inactive or unavailable.");
+ if(profile.must_change_password) throw new Error("Change your temporary password before using the portal.");
  return {supabase,user,role,hospitalId};
 }
 export async function loadWorkspaceRecords(moduleId:string){
