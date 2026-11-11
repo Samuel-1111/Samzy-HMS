@@ -140,3 +140,31 @@ export async function createPortalAccount(input: {
   });
   return { username, temporaryPassword, role: input.role };
 }
+
+export async function managePortalAccount(input: { profileId: string; operation: "reset_password" | "suspend" | "reactivate" }) {
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user || user.app_metadata?.role !== "admin") throw new Error("Administrator access required.");
+  const { data: current } = await supabase.from("user_profiles")
+    .select("hospital_id,is_active,must_change_password").eq("auth_user_id", user.id).maybeSingle();
+  if (!current?.is_active || current.must_change_password || user.app_metadata?.hospital_id !== current.hospital_id) throw new Error("Administrator account is unavailable.");
+  const admin = createAdminClient();
+  const { data: target, error: targetError } = await admin.from("user_profiles")
+    .select("id,auth_user_id,role,login_username,is_active").eq("id", input.profileId)
+    .eq("hospital_id", current.hospital_id).maybeSingle();
+  if (targetError || !target || !["receptionist","staff"].includes(target.role)) throw new Error("Account not found or not manageable.");
+  if (input.operation === "reset_password") {
+    const temporaryPassword = randomBytes(18).toString("base64url");
+    const { error: passwordError } = await admin.auth.admin.updateUserById(target.auth_user_id, { password: temporaryPassword });
+    if (passwordError) throw new Error(passwordError.message);
+    const { error: profileError } = await admin.from("user_profiles").update({ must_change_password: true }).eq("id", target.id);
+    if (profileError) throw new Error(profileError.message);
+    await admin.from("audit_logs").insert({ hospital_id: current.hospital_id, actor_user_id: user.id, action: "account.password_reset", resource_type: "user_profile", resource_id: target.auth_user_id, outcome: "success", metadata: { username: target.login_username } });
+    return { username: target.login_username ?? "", temporaryPassword };
+  }
+  const active = input.operation === "reactivate";
+  const { error: updateError } = await admin.from("user_profiles").update({ is_active: active }).eq("id", target.id);
+  if (updateError) throw new Error(updateError.message);
+  await admin.from("audit_logs").insert({ hospital_id: current.hospital_id, actor_user_id: user.id, action: active ? "account.reactivated" : "account.suspended", resource_type: "user_profile", resource_id: target.auth_user_id, outcome: "success", metadata: { username: target.login_username } });
+  return { ok: true };
+}
