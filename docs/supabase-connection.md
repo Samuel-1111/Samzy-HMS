@@ -1,0 +1,61 @@
+# Supabase Connection — Samzy HMS
+
+## Target project
+
+- Project: Samzy HMS
+- Reference: `nbumcghfpyurtuatarac`
+- API URL: `https://nbumcghfpyurtuatarac.supabase.co`
+- Region: EU West (`eu-west-1`)
+- Database engine: PostgreSQL 17
+- Applied migration: `20261111012748_samzy_hms_initial_schema`
+- Follow-up migration: guardians, referral events, audit triggers and updated-at triggers
+
+## Application environment
+
+Set these values in local `.env.local` and the Vercel project:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_SECRET_KEY` — server-only secret, required only by trusted server-side account provisioning. Never expose it to browser code or commit its value.
+
+The publishable key is intentionally public. RLS is the security boundary; a publishable key is not an authorisation mechanism.
+
+## Application authentication
+
+The repository now contains typed Supabase browser/server clients using `@supabase/ssr`, session-refresh middleware, server-side role/profile guards, a password sign-in page and a server-only administrative client. The portal pages reject unauthenticated users and verify the user's active profile against signed `app_metadata`.
+
+The app does not provide public self-registration. `supabase/config.toml` disables signup for local Supabase configuration; the remote project's Auth provider settings still need to be reviewed in the Supabase dashboard before launch. Email/SMS confirmation and delivery providers are not yet configured.
+
+## Identity claims
+
+RLS policies require signed Auth `app_metadata` values:
+- `hospital_id`: UUID of the hospital tenant
+- `role`: one of `admin`, `receptionist`, `staff`, `patient`
+
+These claims must be written only by a trusted server-side administrative process. Do not use `user_metadata` for role or tenant authorization. No tenant, account or sample data is currently provisioned.
+
+## Storage and realtime
+
+Three buckets are configured with no objects stored:
+- `clinical-documents` — private; staff upload, patients can read only explicitly released file records.
+- `patient-photos` — private; reception/admin manage, linked patient can read their own.
+- `public-site-assets` — public read for approved non-sensitive website assets; admin-only writes.
+
+Realtime publication includes appointments, department visits, queue entries, referrals, referral events, patient messages and notifications. Row-level policies still govern authenticated reads.
+
+## Health endpoint
+
+`GET /api/health/supabase` performs a non-mutating request against the published-content API to verify the configured API endpoint is reachable. It does not prove Auth, RLS role claims, private Storage, or clinical workflows are ready.
+
+## Generated identifiers
+
+Patient, encounter and invoice identifiers are allocated with tenant-scoped atomic counters using the hospital timezone:
+- Patient: `SH-YYYY-000001`
+- Encounter: `ENC-YYYY-000001`
+- Invoice: `INV-YYYY-000001`
+
+A transaction-level test verified sequential allocation and was rolled back; no test tenant or counter row remains.
+
+## Data state
+
+All 44 public tables were verified with RLS enabled and zero rows immediately after schema creation. No Divine Blossom project or data is used by Samzy HMS.
