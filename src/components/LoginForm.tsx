@@ -15,11 +15,12 @@ export default function LoginForm() {
     event.preventDefault(); setBusy(true); setError("");
     try {
       const result = await signInPortal(identifier, password);
-      if (result.error) throw new Error(result.error);
-      if (!result.destination) throw new Error("Unable to determine your portal.");
+      if (result.error) { setError(result.error); return; }
+      if (!result.destination) { setError("We could not determine your portal. Please contact the system administrator."); return; }
       router.replace(result.destination); router.refresh();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to sign in. Check your details and try again.");
+    } catch {
+      // Never expose framework, database, or provider exceptions in the login UI.
+      setError("We could not complete sign-in. Please try again or contact the system administrator.");
     } finally { setBusy(false); }
   }
 
