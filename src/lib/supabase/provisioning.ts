@@ -1,3 +1,4 @@
+import "server-only";
 import type { AppRole } from "@/lib/supabase/guards";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -13,7 +14,7 @@ type ProvisionUserInput = {
 
 /**
  * Trusted server-only account provisioning.
- * Admin/Reception accounts are individual; create exactly one shared Staff account.
+ * Admin/Reception accounts are individual; only one shared Staff account is allowed per hospital.
  * Patient accounts must be linked to an existing permanent Patient ID.
  */
 export async function provisionHospitalUser(input: ProvisionUserInput) {
@@ -23,6 +24,18 @@ export async function provisionHospitalUser(input: ProvisionUserInput) {
   }
 
   const admin = createAdminClient();
+
+  if (input.role === "staff") {
+    const { count, error: countError } = await admin
+      .from("user_profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("hospital_id", input.hospitalId)
+      .eq("role", "staff");
+
+    if (countError) throw new Error(countError.message);
+    if ((count ?? 0) > 0) throw new Error("A shared Staff Portal account already exists for this hospital.");
+  }
+
   const { data, error } = await admin.auth.admin.createUser({
     email: input.email,
     phone: input.phone,
