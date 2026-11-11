@@ -13,7 +13,7 @@ export async function GET() {
 
   try {
     const response = await fetch(
-      `${supabaseConfig.url.replace(/\\/$/, "")}/rest/v1/public_site_content?select=id&limit=0`,
+      `${supabaseConfig.url.endsWith("/") ? supabaseConfig.url.slice(0, -1) : supabaseConfig.url}/rest/v1/public_site_content?select=id&limit=0`,
       {
         method: "GET",
         headers: {
