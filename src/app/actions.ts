@@ -2,7 +2,7 @@
 
 import { randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
-import { clearPortalSession, createPortalSession, verifyPortalCredentials, portalCredentialsStatus, type PortalRole } from "@/lib/auth/admin-session";
+import { clearPortalSession, createPortalSession, verifyPortalCredentials, portalCredentialsStatus, getPortalSession, type PortalRole } from "@/lib/auth/admin-session";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -26,6 +26,20 @@ export async function signInPortal(role: PortalRole, username: string, password:
     console.error("[HMS_AUTH] portal_session_creation_failed", { role, code: error instanceof Error ? error.message : "UNKNOWN" });
     return { error: "The server could not create your secure session. Check the Vercel deployment logs and confirm the portal environment variables are available to this deployment." };
   }
+}
+
+
+export async function getPortalAccountSetupStatus() {
+  const session = await getPortalSession(["admin"]);
+  if (!session) throw new Error("Administrator sign-in is required.");
+  return {
+    admin: portalCredentialsStatus("admin"),
+    receptionist: portalCredentialsStatus("receptionist"),
+    staff: portalCredentialsStatus("staff"),
+    patient: portalCredentialsStatus("patient"),
+    hospitalWorkspaceConfigured: Boolean(process.env.HMS_HOSPITAL_ID?.trim()),
+    cctvBridgeConfigured: Boolean(process.env.CCTV_DISCOVERY_BRIDGE_URL?.trim() && process.env.CCTV_DISCOVERY_BRIDGE_TOKEN?.trim()),
+  };
 }
 
 export async function signOut() {
