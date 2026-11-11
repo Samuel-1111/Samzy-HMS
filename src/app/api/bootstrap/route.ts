@@ -1,0 +1,94 @@
+import { timingSafeEqual } from "node:crypto";
+import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { bootstrapHospital } from "@/lib/supabase/bootstrap";
+
+export const dynamic = "force-dynamic";
+
+type BootstrapPayload = {
+  slug?: string;
+  legalName?: string;
+  displayName?: string;
+  timezone?: string;
+  phone?: string;
+  email?: string;
+  address?: Record<string, unknown>;
+  initialAdmin?: {
+    displayName?: string;
+    password?: string;
+    email?: string;
+    phone?: string;
+  };
+};
+
+function isAuthorized(request: NextRequest) {
+  const expected = process.env.HMS_BOOTSTRAP_TOKEN ?? "";
+  const supplied = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
+  if (!expected || supplied.length !== expected.length) return false;
+  return timingSafeEqual(Buffer.from(supplied), Buffer.from(expected));
+}
+
+export async function POST(request: NextRequest) {
+  if (!process.env.HMS_BOOTSTRAP_TOKEN) {
+    return NextResponse.json({ error: "Bootstrap is disabled." }, { status: 404 });
+  }
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  try {
+    const admin = createAdminClient();
+    const { count, error: countError } = await admin
+      .from("hospitals")
+      .select("id", { count: "exact", head: true });
+
+    if (countError) throw countError;
+    if ((count ?? 0) > 0) {
+      return NextResponse.json({ error: "A hospital tenant already exists. Bootstrap is one-time only." }, { status: 409 });
+    }
+
+    const payload = (await request.json()) as BootstrapPayload;
+    const required = [
+      payload.slug,
+      payload.legalName,
+      payload.displayName,
+      payload.initialAdmin?.displayName,
+      payload.initialAdmin?.password,
+    ];
+    if (required.some((value) => !value?.trim())) {
+      return NextResponse.json({ error: "Hospital details and initial administrator credentials are required." }, { status: 400 });
+    }
+    if (!payload.initialAdmin?.email && !payload.initialAdmin?.phone) {
+      return NextResponse.json({ error: "Initial administrator email or phone is required." }, { status: 400 });
+    }
+    if ((payload.initialAdmin.password ?? "").length < 12) {
+      return NextResponse.json({ error: "Use an initial administrator password of at least 12 characters." }, { status: 400 });
+    }
+    if (!/^[a-z0-9-]{3,50}$/.test(payload.slug ?? "")) {
+      return NextResponse.json({ error: "Hospital slug must be 3–50 lowercase letters, numbers or hyphens." }, { status: 400 });
+    }
+
+    const created = await bootstrapHospital({
+      slug: payload.slug!,
+      legalName: payload.legalName!,
+      displayName: payload.displayName!,
+      timezone: payload.timezone,
+      phone: payload.phone,
+      email: payload.email,
+      address: payload.address,
+      initialAdmin: {
+        displayName: payload.initialAdmin!.displayName!,
+        password: payload.initialAdmin!.password!,
+        email: payload.initialAdmin!.email,
+        phone: payload.initialAdmin!.phone,
+      },
+    });
+
+    return NextResponse.json({ status: "created", ...created }, { status: 201 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Hospital bootstrap failed." },
+      { status: 500 },
+    );
+  }
+}
