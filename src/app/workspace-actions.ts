@@ -88,15 +88,3 @@ export async function createWorkspaceRecord(moduleId:string,values:FormValues){
  revalidatePath("/admin");revalidatePath("/reception");revalidatePath("/staff");revalidatePath("/patient");
  return {ok:true,message:"Saved successfully to the hospital database."};
 }
-export async function setCctvCameraEnabled(cameraId:string,enabled:boolean,purpose:string){
- const {supabase,user,hospitalId,role}=await context(["admin"]);
- if(role!=="admin")throw new Error("Only Admin can manage CCTV access.");
- if(!purpose.trim())throw new Error("An access purpose is required for the audit trail.");
- const {data:camera,error:lookupError}=await supabase.from("cctv_cameras").select("id").eq("id",cameraId).eq("hospital_id",hospitalId).maybeSingle();
- if(lookupError||!camera)throw new Error("Camera record not found in this hospital.");
- const {error}=await supabase.from("cctv_cameras").update({is_enabled:enabled}).eq("id",cameraId).eq("hospital_id",hospitalId);
- if(error)throw new Error(error.message);
- const {error:logError}=await supabase.from("cctv_access_logs").insert({hospital_id:hospitalId,camera_id:cameraId,accessed_by:user.id,action:enabled?"camera_metadata_enabled":"camera_metadata_disabled",purpose});
- if(logError)throw new Error("Camera status changed, but audit logging failed. Stop and notify an administrator: "+logError.message);
- revalidatePath("/admin");return {ok:true};
-}
