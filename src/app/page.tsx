@@ -1,10 +1,10 @@
 import Link from "next/link";
 
 const checks = [
-  ["Database schema", "Provisioned", "done"],
-  ["Row-level security", "Enabled on all 44 tables", "done"],
+  ["Database schema", "44 tables provisioned", "done"],
+  ["Row-level security", "Enabled on all public tables", "done"],
+  ["Supabase SSR authentication", "Integration code added", "done"],
   ["Hospital tenant and user accounts", "Not configured", "pending"],
-  ["Secure portal authentication", "Pending integration", "pending"],
   ["Clinical workflows and acceptance tests", "Pending implementation", "pending"],
 ];
 
@@ -20,6 +20,7 @@ export default function Home() {
         <h1>Samzy HMS</h1>
         <p>A secure, configurable foundation for hospital administration, reception, clinical teams and patient services.</p>
         <div className="setup-state"><i /> DATABASE FOUNDATION PROVISIONED</div>
+        <Link href="/login" className="setup-login-link">Secure sign in <span>↗</span></Link>
       </section>
       <section className="setup-panel">
         <div className="setup-panel-heading">
@@ -35,8 +36,8 @@ export default function Home() {
           ))}
         </div>
         <p className="setup-warning">
-          Portal access is intentionally locked until authentication and server-side authorisation are connected.
-          No hospital has been configured and no operational or sample data exists.
+          No hospital tenant or user accounts have been created. Portal access is available only to provisioned,
+          authorised accounts. Clinical workflows remain locked until hospital configuration and acceptance tests pass.
         </p>
       </section>
       <footer className="setup-footer">Samzy HMS · Built by Samzy Technology · Not yet approved for clinical production use</footer>
