@@ -40,8 +40,8 @@ export async function provisionHospitalUser(input: ProvisionUserInput) {
     email: input.email,
     phone: input.phone,
     password: input.password,
-    email_confirm: Boolean(input.email),
-    phone_confirm: Boolean(input.phone),
+    email_confirm: false,
+    phone_confirm: false,
     app_metadata: {
       hospital_id: input.hospitalId,
       role: input.role,
