@@ -12,8 +12,8 @@ export default function LoginPage() {
           <span><b>SAMZY HMS</b><small>SECURE HOSPITAL OPERATIONS</small></span>
         </Link>
         <div className="portal-lock-status"><span /> AUTHENTICATED ACCESS ONLY</div>
-        <h1>Sign in</h1>
-        <p className="portal-lock-lead">Use the credentials issued by your hospital administrator. Your role and hospital access are verified on the server.</p>
+        <h1>Administrator Portal</h1>
+        <p className="portal-lock-lead">Sign in with the Administrator username and password configured in your Vercel environment variables.</p>
         <LoginForm />
       </section>
     </main>
