@@ -1,11 +1,39 @@
 "use server";
 
-import { randomBytes } from "node:crypto";
+import { randomBytes, timingSafeEqual } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { bootstrapHospital } from "@/lib/supabase/bootstrap";
 import { redirect } from "next/navigation";
 
 const destinations: Record<string, string> = { admin: "/admin", receptionist: "/reception", staff: "/staff", patient: "/patient" };
+const internalAuthEmail = (username: string) => username.toLowerCase() + "@accounts.samzy-hms.invalid";
+
+async function provisionFirstAdminFromEnvironment(username: string, password: string) {
+  const configuredUsername = process.env.admin_username?.trim().toLowerCase() ?? "";
+  const configuredPassword = process.env.admin_password ?? "";
+  if (!configuredUsername || !configuredPassword || username.toLowerCase() !== configuredUsername) return false;
+  const supplied = Buffer.from(password, "utf8");
+  const expected = Buffer.from(configuredPassword, "utf8");
+  if (supplied.length !== expected.length || !timingSafeEqual(supplied, expected)) return false;
+  const admin = createAdminClient();
+  const { count, error } = await admin.from("hospitals").select("id", { count: "exact", head: true });
+  if (error) throw new Error("Unable to verify the HMS initial setup state.");
+  if ((count ?? 0) > 0) return false;
+  await bootstrapHospital({
+    slug: "samzy-hms-test",
+    legalName: "Samzy HMS Test Environment",
+    displayName: "Samzy HMS Test Workspace",
+    timezone: "Africa/Lagos",
+    initialAdmin: {
+      displayName: "Samzy HMS Administrator",
+      loginUsername: configuredUsername,
+      password: configuredPassword,
+      authEmail: internalAuthEmail(configuredUsername),
+    },
+  });
+  return true;
+}
 
 export async function signInPortal(identifier: string, password: string) {
   const value = identifier.trim();
@@ -21,11 +49,21 @@ export async function signInPortal(identifier: string, password: string) {
   } else {
     const admin = createAdminClient();
     const { data: profile, error } = await admin.from("user_profiles")
-      .select("email,phone,is_active").eq("login_username", value.toLowerCase()).maybeSingle();
-    if (error || !profile || !profile.is_active || (!profile.email && !profile.phone)) {
-      return { error: "Invalid username or password." };
+      .select("email,phone,login_username,is_active").eq("login_username", value.toLowerCase()).maybeSingle();
+    if (!profile && !error) {
+      try {
+        const created = await provisionFirstAdminFromEnvironment(value, password);
+        if (created) credentials = { email: internalAuthEmail(value), password };
+        else return { error: "Invalid username or password." };
+      } catch {
+        return { error: "Initial administrator setup could not be completed. Check the server configuration and try again." };
+      }
+    } else {
+      if (error || !profile || !profile.is_active) return { error: "Invalid username or password." };
+      credentials = profile.email ? { email: profile.email, password }
+        : profile.phone ? { phone: profile.phone, password }
+        : { email: internalAuthEmail(profile.login_username ?? value), password };
     }
-    credentials = profile.email ? { email: profile.email, password } : { phone: profile.phone!, password };
   }
 
   const { error: signInError } = await supabase.auth.signInWithPassword(credentials);
@@ -114,8 +152,8 @@ export async function createPortalAccount(input: {
   const phoneRaw = input.phone?.trim() || undefined;
   const phone = phoneRaw ? (phoneRaw.startsWith("0") && phoneRaw.length === 11 ? "+234" + phoneRaw.slice(1) : phoneRaw.startsWith("234") ? "+" + phoneRaw : phoneRaw) : undefined;
   if (!displayName || !/^[a-z0-9][a-z0-9._-]{2,31}$/.test(username)) throw new Error("Enter a name and a valid username (3–32 characters).");
-  if (!email && !phone) throw new Error("Enter an email address or phone number.");
-  if (!input.contactVerified) throw new Error("Confirm that you have verified this person's identity and contact details before creating the account.");
+  if ((email || phone) && !input.contactVerified) throw new Error("Confirm that you have verified this person's identity and contact details before creating the account.");
+  const authEmail = !email && !phone ? internalAuthEmail(username) : undefined;
   const admin = createAdminClient();
   if (input.role === "staff") {
     const { count, error: countError } = await admin.from("user_profiles").select("id", { count: "exact", head: true })
@@ -125,7 +163,7 @@ export async function createPortalAccount(input: {
   }
   const temporaryPassword = randomBytes(18).toString("base64url");
   const { data: created, error: createError } = await admin.auth.admin.createUser({
-    email, phone, password: temporaryPassword, email_confirm: Boolean(email), phone_confirm: Boolean(phone),
+    email: email ?? authEmail, phone, password: temporaryPassword, email_confirm: Boolean(email || authEmail), phone_confirm: Boolean(phone),
     app_metadata: { hospital_id: current.hospital_id, role: input.role },
     user_metadata: { display_name: displayName },
   });
