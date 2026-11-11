@@ -13,7 +13,7 @@ Samzy HMS is being built as a reusable, tenant-isolated hospital operations plat
 - Versioned database migrations: `supabase/migrations/`
 - Core relational tables: 44
 - Row Level Security: enabled on every public table
-- Tenant-scoped foreign keys: enforced
+- Tenant-scoped foreign keys: enforced; foreign-key indexes provisioned
 - Security advisor: no current security lint findings
 - Storage buckets: 3 configured; zero stored objects
 - Realtime feeds: 7 operational tables configured
