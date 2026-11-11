@@ -2,54 +2,71 @@
 
 import { randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
-import { clearPortalSession, createPortalSession, verifyPortalCredentials, portalCredentialsStatus, getPortalSession, type PortalRole } from "@/lib/auth/admin-session";
+import { clearPortalSession, getPortalSession, type PortalRole } from "@/lib/auth/admin-session";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const destinations: Record<string, string> = { admin: "/admin", receptionist: "/reception", staff: "/staff", patient: "/patient" };
-const internalAuthEmail = (username: string) => username.toLowerCase() + "@accounts.samzy-hms.invalid";
-
 export async function signInPortal(role: PortalRole, username: string, password: string) {
   if (!["admin", "receptionist", "staff", "patient"].includes(role)) return { error: "Select a valid portal." };
-  if (role === "patient") return { error: "Individual patient accounts are not ready yet. Shared Patient Portal credentials are disabled to protect private medical records." };
-  if (!username.trim() || !password) return { error: "Enter your username and password." };
-  const status = portalCredentialsStatus(role);
-  if (!status.configured) {
-    const label = role === "admin" ? "ADMIN" : role.toUpperCase();
-    return { error: `The ${role} login is not configured in Vercel. Add ${label}_USERNAME and ${label}_PASSWORD, then redeploy.` };
+  if (role === "patient") return { error: "Individual patient accounts are not ready yet. Patient access remains locked until patient identities are provisioned." };
+  const normalizedUsername = username.trim().toLowerCase();
+  if (!normalizedUsername || !password) return { error: "Enter your username and password." };
+
+  const admin = createAdminClient();
+  const { data: profile, error: profileError } = await admin.from("user_profiles")
+    .select("auth_user_id,hospital_id,role,is_active,login_username")
+    .eq("login_username", normalizedUsername)
+    .eq("role", role)
+    .maybeSingle();
+  if (profileError) {
+    console.error("[HMS_AUTH] profile_lookup_failed", profileError.message);
+    return { error: "The account directory is temporarily unavailable. Please try again." };
   }
-  if (!verifyPortalCredentials(role, username, password)) return { error: "Incorrect username or password for this portal." };
-  try {
-    await createPortalSession(role, username);
-    const destinations: Record<PortalRole, string> = { admin: "/admin", receptionist: "/reception", staff: "/staff", patient: "/patient" };
-    return { destination: destinations[role] };
-  } catch (error) {
-    console.error("[HMS_AUTH] portal_session_creation_failed", { role, code: error instanceof Error ? error.message : "UNKNOWN" });
-    return { error: "The server could not create your secure session. Check the Vercel deployment logs and confirm the portal environment variables are available to this deployment." };
+  if (!profile || !profile.is_active) return { error: "Incorrect username or password for this portal." };
+
+  const { data: authResult, error: authLookupError } = await admin.auth.admin.getUserById(profile.auth_user_id);
+  if (authLookupError || !authResult.user) return { error: "This account is unavailable. Contact the hospital administrator." };
+  const authUser = authResult.user;
+  if (authUser.app_metadata?.role !== role || authUser.app_metadata?.hospital_id !== profile.hospital_id) {
+    console.error("[HMS_AUTH] profile_metadata_mismatch", { userId: profile.auth_user_id, role });
+    return { error: "This account is not correctly provisioned. Contact the system administrator." };
   }
+
+  const supabase = await createClient();
+  const credentials = authUser.email
+    ? { email: authUser.email, password }
+    : authUser.phone
+      ? { phone: authUser.phone, password }
+      : null;
+  if (!credentials) return { error: "This account has no supported sign-in identity. Contact the administrator." };
+
+  const { data, error } = await supabase.auth.signInWithPassword(credentials);
+  if (error || !data.user) return { error: "Incorrect username or password for this portal." };
+  if (data.user.id !== profile.auth_user_id) {
+    await supabase.auth.signOut();
+    return { error: "The authenticated account does not match this portal profile." };
+  }
+  const destinations: Record<PortalRole, string> = { admin: "/admin", receptionist: "/reception", staff: "/staff", patient: "/patient" };
+  return { destination: destinations[role] };
 }
 
 
 export async function getPortalAccountSetupStatus() {
   const session = await getPortalSession(["admin"]);
   if (!session) throw new Error("Administrator sign-in is required.");
-  let hospitalWorkspaceConfigured = false;
-  const hospitalId = process.env.HMS_HOSPITAL_ID?.trim() || "";
-  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(hospitalId)) {
-    try {
-      const admin = createAdminClient();
-      const { data } = await admin.from("hospitals").select("id,status").eq("id", hospitalId).maybeSingle();
-      hospitalWorkspaceConfigured = data?.status === "active";
-    } catch {
-      hospitalWorkspaceConfigured = false;
-    }
-  }
+  const admin = createAdminClient();
+  const { data, error } = await admin.from("user_profiles")
+    .select("role,is_active").eq("hospital_id", session.hospitalId);
+  if (error) throw new Error(error.message);
+  const rows = data ?? [];
+  const status = (role: PortalRole) => ({ configured: rows.some((row) => row.role === role && row.is_active), username: rows.some((row) => row.role === role && row.is_active), password: rows.some((row) => row.role === role && row.is_active) });
   return {
-    admin: portalCredentialsStatus("admin"),
-    receptionist: portalCredentialsStatus("receptionist"),
-    staff: portalCredentialsStatus("staff"),
-    patient: portalCredentialsStatus("patient"),
-    hospitalWorkspaceConfigured,
+    admin: status("admin"),
+    receptionist: status("receptionist"),
+    staff: status("staff"),
+    patient: status("patient"),
+    hospitalWorkspaceConfigured: true,
   };
 }
 
