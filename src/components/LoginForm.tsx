@@ -19,7 +19,7 @@ export default function LoginForm() {
       if (!result.destination) throw new Error("Unable to determine your portal.");
       router.replace(result.destination); router.refresh();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to sign in. Check your details and try again.");
+      // Never expose framework, database, or provider exceptions in the login UI.\n      setError("We could not complete sign-in. Please try again or contact the system administrator.");
     } finally { setBusy(false); }
   }
 
