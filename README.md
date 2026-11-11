@@ -43,7 +43,7 @@ Role and tenant claims are assigned only by trusted server-side provisioning in 
 
 Requires Node.js 22+ and npm.
 
-    npm install
+    npm ci
     cp .env.example .env.local
     npm run dev
 
