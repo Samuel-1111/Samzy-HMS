@@ -65,9 +65,14 @@ export async function changeOwnPassword(newPassword: string, confirmPassword: st
   const { error } = await supabase.auth.updateUser({ password: newPassword });
   if (error) return { error: error.message };
   const admin = createAdminClient();
-  const { error: profileError } = await admin.from("user_profiles")
-    .update({ must_change_password: false }).eq("auth_user_id", user.id);
-  if (profileError) return { error: "Password changed, but account activation did not complete. Contact the administrator." };
+  const { data: profile, error: profileError } = await admin.from("user_profiles")
+    .update({ must_change_password: false }).eq("auth_user_id", user.id)
+    .select("hospital_id").maybeSingle();
+  if (profileError || !profile) return { error: "Password changed, but account activation did not complete. Contact the administrator." };
+  await admin.from("audit_logs").insert({
+    hospital_id: profile.hospital_id, actor_user_id: user.id, action: "account.password_changed",
+    resource_type: "user_profile", resource_id: user.id, outcome: "success", metadata: {},
+  });
   const role = String(user.app_metadata?.role ?? "");
   return { destination: destinations[role] ?? "/login" };
 }
@@ -78,7 +83,7 @@ export async function listPortalAccounts() {
   if (error || !user || user.app_metadata?.role !== "admin") throw new Error("Administrator access required.");
   const { data: current, error: currentError } = await supabase.from("user_profiles")
     .select("hospital_id,is_active,must_change_password").eq("auth_user_id", user.id).maybeSingle();
-  if (currentError || !current?.is_active || current.must_change_password) throw new Error("Administrator account is unavailable.");
+  if (currentError || !current?.is_active || current.must_change_password || user.app_metadata?.hospital_id !== current.hospital_id) throw new Error("Administrator account is unavailable.");
   const admin = createAdminClient();
   const { data, error: listError } = await admin.from("user_profiles")
     .select("id,display_name,login_username,role,email,phone,is_active,must_change_password,created_at")
@@ -96,7 +101,7 @@ export async function createPortalAccount(input: {
   if (error || !user || user.app_metadata?.role !== "admin") throw new Error("Administrator access required.");
   const { data: current } = await supabase.from("user_profiles")
     .select("hospital_id,is_active,must_change_password").eq("auth_user_id", user.id).maybeSingle();
-  if (!current?.is_active || current.must_change_password) throw new Error("Administrator account is unavailable.");
+  if (!current?.is_active || current.must_change_password || user.app_metadata?.hospital_id !== current.hospital_id) throw new Error("Administrator account is unavailable.");
   const username = input.username.trim().toLowerCase();
   const displayName = input.displayName.trim();
   const email = input.email?.trim().toLowerCase() || undefined;
