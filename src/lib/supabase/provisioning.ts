@@ -9,6 +9,7 @@ type ProvisionUserInput = {
   loginUsername: string;
   password: string;
   email?: string;
+  authEmail?: string;
   phone?: string;
   patientId?: string;
   emailVerified?: boolean;
@@ -17,7 +18,7 @@ type ProvisionUserInput = {
 };
 
 export async function provisionHospitalUser(input: ProvisionUserInput) {
-  if (!input.email && !input.phone) throw new Error("A verified email address or phone number is required.");
+  if (!input.email && !input.phone && !input.authEmail) throw new Error("An authentication email or phone number is required.");
   if (!/^[a-z0-9][a-z0-9._-]{2,31}$/.test(input.loginUsername)) throw new Error("Username must be 3–32 lowercase letters, numbers, dots, underscores or hyphens.");
   if (input.role === "patient" && !input.patientId) throw new Error("A patient account must be linked to an existing permanent Patient ID.");
 
@@ -30,8 +31,8 @@ export async function provisionHospitalUser(input: ProvisionUserInput) {
   }
 
   const { data, error } = await admin.auth.admin.createUser({
-    email: input.email, phone: input.phone, password: input.password,
-    email_confirm: Boolean(input.email && input.emailVerified),
+    email: input.email ?? input.authEmail, phone: input.phone, password: input.password,
+    email_confirm: Boolean(input.authEmail) || Boolean(input.email && input.emailVerified),
     phone_confirm: Boolean(input.phone && input.phoneVerified),
     app_metadata: { hospital_id: input.hospitalId, role: input.role },
     user_metadata: { display_name: input.displayName },
