@@ -18,3 +18,10 @@
 @media(max-width:1050px){.admin-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-columns{grid-template-columns:1fr}}
 @media(max-width:760px){.dashboard-welcome{align-items:flex-start;flex-direction:column;padding:18px}.dashboard-date{text-align:left}.admin-stat-grid{gap:8px}.admin-stat{padding:13px;min-height:135px}.dashboard-panel{padding:14px}.cctv-readiness{grid-template-columns:1fr}}
 @media(max-width:420px){.dashboard-welcome h3{font-size:19px}.admin-stat>strong{font-size:23px}.stat-top{font-size:9px}.dashboard-shortcuts>b{width:100%}.dashboard-shortcuts button{flex:1}.queue-preview em{font-size:7px}}
+
+/* Reception and patient portal dashboard accents */
+.metric-card:nth-child(4n+1){background:#eff7fd;border-color:#dcecf7}.metric-card:nth-child(4n+1) b{color:#247eae}
+.metric-card:nth-child(4n+2){background:#fff7ec;border-color:#f6e8d2}.metric-card:nth-child(4n+2) b{color:#bd7a25}
+.metric-card:nth-child(4n+3){background:#eef9f3;border-color:#dcefe4}.metric-card:nth-child(4n+3) b{color:#23865b}
+.metric-card:nth-child(4n){background:#f5f1fc;border-color:#e8e0f5}.metric-card:nth-child(4n) b{color:#7e5aad}
+.metric-card span{color:#6f8292}.metric-card small{color:#778b9b}
