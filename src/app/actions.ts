@@ -62,9 +62,15 @@ export async function changeOwnPassword(newPassword: string, confirmPassword: st
   const supabase = await createClient();
   const { data: { user }, error: userError } = await supabase.auth.getUser();
   if (userError || !user) return { error: "Your session has expired. Sign in again." };
+  const admin = createAdminClient();
+  const { data: current, error: currentError } = await admin.from("user_profiles")
+    .select("hospital_id,login_username,is_active").eq("auth_user_id", user.id).maybeSingle();
+  if (currentError || !current?.is_active) return { error: "This account is inactive or unavailable." };
+  if (current.login_username && newPassword.toLowerCase() === current.login_username.toLowerCase()) {
+    return { error: "Your new password must be different from your username." };
+  }
   const { error } = await supabase.auth.updateUser({ password: newPassword });
   if (error) return { error: error.message };
-  const admin = createAdminClient();
   const { data: profile, error: profileError } = await admin.from("user_profiles")
     .update({ must_change_password: false }).eq("auth_user_id", user.id)
     .select("hospital_id").maybeSingle();
