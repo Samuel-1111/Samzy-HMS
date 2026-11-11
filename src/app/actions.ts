@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const destinations: Record<string, string> = { admin: "/admin", receptionist: "/reception", staff: "/staff", patient: "/patient" };
+const internalAuthEmail = (username: string) => username.toLowerCase() + "@accounts.samzy-hms.invalid";
 export async function signInPortal(role: PortalRole, username: string, password: string) {
   if (!["admin", "receptionist", "staff", "patient"].includes(role)) return { error: "Select a valid portal." };
   if (role === "patient") return { error: "Individual patient accounts are not ready yet. Patient access remains locked until patient identities are provisioned." };
