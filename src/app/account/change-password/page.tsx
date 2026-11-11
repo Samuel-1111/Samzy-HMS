@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { redirect } from "next/navigation";
 import { getPortalSession } from "@/lib/auth/admin-session";
 import ChangePasswordForm from "@/components/ChangePasswordForm";
