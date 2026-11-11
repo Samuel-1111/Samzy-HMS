@@ -7,13 +7,14 @@ The database is reusable and tenant-scoped through `hospital_id` on operational 
 ## Stack
 
 - Next.js App Router, React and TypeScript
-- Supabase PostgreSQL 17, Auth foundation and RLS
+- Supabase PostgreSQL 17, Auth, RLS, Storage and Realtime foundations
 - Vercel deployment target (not yet connected)
-- Private Storage and realtime features to be configured after authentication and access rules are completed
+- Supabase SSR cookie clients, middleware session refresh and server-side role/profile guards
+- Generated database types in `src/types/database.ts`
 
 ## Portals and account model
 
-1. Public website — only approved hospital content may be published.
+1. Public system entry — only approved hospital content may be published.
 2. Admin — individual accounts.
 3. Receptionist — individual accounts.
 4. Staff — one shared login, manually entered author name and dynamic department selection.
@@ -31,15 +32,18 @@ Timestamps are stored in UTC and displayed in Africa/Lagos. Phone numbers are no
 
 ## RLS and identity
 
-Every public table has RLS enabled. Policies use signed Supabase Auth `app_metadata` claims for `hospital_id` and `role`; user-editable `user_metadata` must never determine access. Claims must be written only by trusted server-side provisioning. No users or tenant rows exist yet, so no operational access is enabled.
+Every public table has RLS enabled. Policies use signed Supabase Auth `app_metadata` claims for `hospital_id` and `role`; user-editable `user_metadata` must never determine access. Claims are written only by trusted server-side provisioning. No users or tenant rows exist yet.
 
 - Admin and Reception manage identity and operational administration within their tenant.
 - Staff can access clinical work areas according to the shared staff role.
-- Patients can access only their own explicitly released records.
+- Patients can access only their own explicitly released data.
 - Guardian access is separately permissioned.
 - Patient messages are visible only to Reception and the relevant patient.
 - CCTV configuration and access logs are admin-only.
 - Clinical history is append-only, with amendments preserved separately.
+- Composite tenant foreign keys prevent cross-hospital record references.
+- Storage buckets are private by default except approved public-site assets.
+- Realtime publication covers queues, appointments, referrals, messages and notifications.
 
 ## Patient journey
 
@@ -49,7 +53,7 @@ Reception searches/registers the patient, checks in and creates an encounter. Th
 
 - No real patient data in development.
 - Private Storage, signed URLs and explicit patient release required.
-- Audit events must record access and material changes without duplicating clinical payloads.
+- Database triggers record metadata-only write events; application-level read/access events still need implementation.
 - Backups, restore drills, retention, incident response and downtime procedures are mandatory.
 - Review Nigeria Data Protection Act 2023 and applicable health-sector requirements with qualified professionals.
 - Clinical forms and workflows require qualified hospital review.
@@ -57,4 +61,4 @@ Reception searches/registers the patient, checks in and creates an encounter. Th
 
 ## Delivery gate
 
-Database foundation is provisioned. Authentication, application integration, clinical workflows, hospital configuration, external integrations, Vercel deployment and end-to-end acceptance testing are not yet complete. Do not represent the system as production-ready until those gates pass.
+Database schema, RLS, tenant-scoped relationships, Storage bucket policies, Realtime publication and SSR Auth scaffolding are provisioned. Hospital-specific setup, verified account activation, full application workflows, audit-read logging, external integrations, Vercel deployment and end-to-end acceptance testing are not yet complete. Do not represent the system as production-ready until those gates pass.
