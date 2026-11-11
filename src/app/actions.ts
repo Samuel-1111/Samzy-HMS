@@ -2,32 +2,34 @@
 
 import { randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
-import { clearAdminSession, createAdminSession, verifyAdminCredentials } from "@/lib/auth/admin-session";
+import { clearPortalSession, createPortalSession, verifyPortalCredentials, portalCredentialsStatus, type PortalRole } from "@/lib/auth/admin-session";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const destinations: Record<string, string> = { admin: "/admin", receptionist: "/reception", staff: "/staff", patient: "/patient" };
 const internalAuthEmail = (username: string) => username.toLowerCase() + "@accounts.samzy-hms.invalid";
 
-export async function signInPortal(username: string, password: string) {
-  const value = username.trim();
-  if (!value || !password) return { error: "Enter your username and password." };
-  if (!verifyAdminCredentials(value, password)) {
-    return { error: "Invalid username or password." };
+export async function signInPortal(role: PortalRole, username: string, password: string) {
+  if (!["admin", "receptionist", "staff", "patient"].includes(role)) return { error: "Select a valid portal." };
+  if (!username.trim() || !password) return { error: "Enter your username and password." };
+  const status = portalCredentialsStatus(role);
+  if (!status.configured) {
+    const label = role === "admin" ? "ADMIN" : role.toUpperCase();
+    return { error: `The ${role} login is not configured in Vercel. Add ${label}_USERNAME and ${label}_PASSWORD, then redeploy.` };
   }
+  if (!verifyPortalCredentials(role, username, password)) return { error: "Incorrect username or password for this portal." };
   try {
-    await createAdminSession(value);
-    return { destination: "/admin" };
+    await createPortalSession(role, username);
+    const destinations: Record<PortalRole, string> = { admin: "/admin", receptionist: "/reception", staff: "/staff", patient: "/patient" };
+    return { destination: destinations[role] };
   } catch (error) {
-    console.error("[HMS_AUTH] admin_session_creation_failed", {
-      code: error instanceof Error ? error.message : "UNKNOWN",
-    });
-    return { error: "Login is temporarily unavailable. Check the Vercel server environment variables and redeploy." };
+    console.error("[HMS_AUTH] portal_session_creation_failed", { role, code: error instanceof Error ? error.message : "UNKNOWN" });
+    return { error: "The server could not create your secure session. Check the Vercel deployment logs and confirm the portal environment variables are available to this deployment." };
   }
 }
 
 export async function signOut() {
-  await clearAdminSession();
+  await clearPortalSession();
   redirect("/login");
 }
 
