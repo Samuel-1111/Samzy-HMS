@@ -15,7 +15,7 @@ export async function signInPortal(role: PortalRole, username: string, password:
 
   const admin = createAdminClient();
   const { data: profile, error: profileError } = await admin.from("user_profiles")
-    .select("auth_user_id,hospital_id,role,is_active,login_username")
+    .select("auth_user_id,hospital_id,role,is_active,login_username,must_change_password")
     .eq("login_username", normalizedUsername)
     .eq("role", role)
     .maybeSingle();
@@ -48,7 +48,7 @@ export async function signInPortal(role: PortalRole, username: string, password:
     return { error: "The authenticated account does not match this portal profile." };
   }
   const destinations: Record<PortalRole, string> = { admin: "/admin", receptionist: "/reception", staff: "/staff", patient: "/patient" };
-  return { destination: destinations[role] };
+  return { destination: profile.must_change_password ? "/account/change-password" : destinations[role] };
 }
 
 
