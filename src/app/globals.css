@@ -381,3 +381,39 @@ html[data-theme="dark"] .login-form .login-password-toggle{background:#203448;bo
 .hms-env-instructions{display:grid;gap:10px;margin:14px 0;padding-left:22px;color:#536d7f;font-size:11px;line-height:1.7}
 .hms-env-instructions code{padding:2px 5px;border-radius:4px;background:#edf3f6;color:#285d7a;font-size:10px}
 @media(max-width:650px){.hms-account-env-grid{grid-template-columns:1fr}.hms-account-env-card>div{flex-direction:column}}
+
+/* Larger operational typography and more generous desktop workspace density. */
+@media(min-width:761px){.hms-app{grid-template-columns:286px minmax(0,1fr)}}
+.hms-sidebar{padding:24px 17px 17px}
+.hms-brand b{font-size:14px}.hms-brand small{font-size:9px}
+.hms-workspace-label,.hms-nav-group{font-size:10px}
+.hms-workspace-card{min-height:61px}
+.hms-search{min-height:43px}.hms-search input{font-size:12px}
+.hms-nav button{min-height:43px;font-size:12px}
+.hms-nav button>span{font-size:17px}
+.hms-topbar{height:88px;padding:0 clamp(20px,2.4vw,38px)}
+.hms-breadcrumb{font-size:9px}.hms-topbar h1{font-size:21px}
+.hms-user b{font-size:12px}.hms-user small{font-size:10px}
+.hms-content{max-width:1800px;padding:30px clamp(20px,2.5vw,40px) 44px}
+.hms-welcome{min-height:138px;padding:26px 29px;border-radius:16px}
+.hms-eyebrow{font-size:9px}
+.hms-welcome h2{font-size:clamp(26px,2vw,34px);letter-spacing:-.04em}
+.hms-welcome p{font-size:13px;max-width:760px}
+.hms-date-chip{padding:12px 15px}.hms-date-chip b{font-size:11px}.hms-date-chip small{font-size:9px}
+.hms-stat-grid{gap:15px}.hms-stat{min-height:142px;padding:20px;border-radius:14px}
+.hms-stat-top span{font-size:10px}.hms-stat-top i{width:37px;height:37px;font-size:17px}
+.hms-stat>b{font-size:32px}.hms-stat>small{font-size:11px}
+.hms-panel{padding:23px;border-radius:14px;margin-bottom:17px}
+.hms-panel-heading h3{font-size:17px}.hms-panel-heading p{font-size:11px}
+.hms-neutral-tag{font-size:9px;padding:7px 10px}
+.hms-shortcuts button{min-height:56px;padding:12px 13px;font-size:11px}
+.hms-toolbar>label{height:45px;width:min(100%,460px);padding:0 13px}
+.hms-toolbar>label input{font-size:12px}
+.hms-filter,.hms-primary{min-height:42px;padding:0 15px;font-size:11px}
+.hms-table th{padding:14px 12px;font-size:9px}
+.hms-table td{padding:13px 12px;font-size:12px}
+.hms-data-form{gap:17px}.hms-data-form label{font-size:12px}
+.hms-data-form input,.hms-data-form select,.hms-data-form textarea{min-height:43px;font-size:12px}
+.hms-empty h3{font-size:17px}.hms-empty p{font-size:12px}.hms-empty small{font-size:10px}
+.hms-footer{font-size:10px}
+@media(max-width:760px){.hms-topbar{height:72px;padding:0 15px}.hms-content{padding:18px 14px 30px}.hms-welcome{padding:17px}.hms-welcome h2{font-size:23px}.hms-panel{padding:15px}.hms-stat{min-height:125px;padding:14px}.hms-stat>b{font-size:27px}.hms-toolbar>label{height:42px}.hms-table th{font-size:8px}.hms-table td{font-size:11px}}
