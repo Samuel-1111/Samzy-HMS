@@ -28,6 +28,15 @@ RLS policies require signed Auth `app_metadata` values:
 
 These claims must be written only by a trusted server-side administrative process. Do not use `user_metadata` for role or tenant authorization. No tenant, account or sample data is currently provisioned.
 
+## Storage and realtime
+
+Three buckets are configured with no objects stored:
+- `clinical-documents` — private; staff upload, patients can read only explicitly released file records.
+- `patient-photos` — private; reception/admin manage, linked patient can read their own.
+- `public-site-assets` — public read for approved non-sensitive website assets; admin-only writes.
+
+Realtime publication includes appointments, department visits, queue entries, referrals, referral events, patient messages and notifications. Row-level policies still govern authenticated reads.
+
 ## Health endpoint
 
 `GET /api/health/supabase` performs a non-mutating request against the published-content API to verify the configured API endpoint is reachable. It does not prove Auth, RLS role claims, private Storage, or clinical workflows are ready.
