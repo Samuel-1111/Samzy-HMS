@@ -10,6 +10,8 @@ type ProvisionUserInput = {
   email?: string;
   phone?: string;
   patientId?: string;
+  emailVerified?: boolean;
+  phoneVerified?: boolean;
 };
 
 /**
@@ -40,8 +42,8 @@ export async function provisionHospitalUser(input: ProvisionUserInput) {
     email: input.email,
     phone: input.phone,
     password: input.password,
-    email_confirm: false,
-    phone_confirm: false,
+    email_confirm: Boolean(input.email && input.emailVerified),
+    phone_confirm: Boolean(input.phone && input.phoneVerified),
     app_metadata: {
       hospital_id: input.hospitalId,
       role: input.role,
