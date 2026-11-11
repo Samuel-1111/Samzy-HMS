@@ -417,3 +417,7 @@ html[data-theme="dark"] .login-form .login-password-toggle{background:#203448;bo
 .hms-empty h3{font-size:17px}.hms-empty p{font-size:12px}.hms-empty small{font-size:10px}
 .hms-footer{font-size:10px}
 @media(max-width:760px){.hms-topbar{height:72px;padding:0 15px}.hms-content{padding:18px 14px 30px}.hms-welcome{padding:17px}.hms-welcome h2{font-size:23px}.hms-panel{padding:15px}.hms-stat{min-height:125px;padding:14px}.hms-stat>b{font-size:27px}.hms-toolbar>label{height:42px}.hms-table th{font-size:8px}.hms-table td{font-size:11px}}
+
+.hms-cctv-found article button:first-of-type{border-color:#b8d8e7;background:#eaf6fb;color:#145f85}
+.hms-cctv-found article button:disabled{opacity:.6;cursor:wait}
+.hms-cctv-found article button+button{border-color:#dfe7ec;background:#fff;color:#4d6879}
