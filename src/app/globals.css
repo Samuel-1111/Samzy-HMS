@@ -132,3 +132,18 @@ html[data-theme="dark"] .portal-lock-note{background:#172838;color:#a9bdcb}
 .hms-form-panel{margin-bottom:14px}.hms-data-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.hms-data-form label{display:grid;gap:7px;font-size:9px;font-weight:700;color:var(--hmuted)}.hms-data-form input,.hms-data-form select,.hms-data-form textarea{width:100%;min-width:0;padding:11px 12px;border:1px solid var(--hline);border-radius:8px;background:var(--hsurface2);color:var(--htext);font-size:10px;outline:none}.hms-data-form input:focus,.hms-data-form select:focus,.hms-data-form textarea:focus{border-color:#70acd0;box-shadow:0 0 0 3px #70acd01a}.hms-data-form textarea{resize:vertical}.hms-form-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:9px;padding-top:5px}.hms-primary:disabled{opacity:.55;cursor:wait}.hms-notice-error{background:#fff0f0;border-color:#f1caca;color:#9b3b3b}.hms-cctv-warning{margin-bottom:14px}.hms-table td{padding:10px;border-bottom:1px solid var(--hline);font-size:9px;color:var(--htext);vertical-align:top;max-width:260px;overflow-wrap:anywhere}.hms-table th{white-space:nowrap}.hms-table{min-width:760px}
 html[data-theme="dark"] .hms-data-form input,html[data-theme="dark"] .hms-data-form select,html[data-theme="dark"] .hms-data-form textarea{background:#0e1b28;border-color:#2b4052;color:#e4edf4}html[data-theme="dark"] .hms-notice-error{background:#3a2025;border-color:#67343c;color:#f0b8bf}
 @media(max-width:600px){.hms-data-form{grid-template-columns:1fr}.hms-form-actions{grid-column:1}.hms-toolbar>div{align-items:center}.hms-table{min-width:720px}}
+
+
+/* Admin account provisioning */
+.hms-account-issued{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:end;padding:20px;margin:18px 0;border:1px solid #86cda4;border-radius:16px;background:rgba(34,197,94,.07)}
+.hms-account-issued>div{grid-column:1/-1}
+.hms-account-issued b{display:block;font-size:15px}
+.hms-account-issued p{margin:6px 0 0;color:var(--muted,#64748b);font-size:13px}
+.hms-account-issued label{display:grid;gap:6px;font-size:12px;font-weight:700}
+.hms-account-issued input{width:100%;min-width:0;padding:11px;border:1px solid var(--border,#dbe2ea);border-radius:9px;background:var(--surface,#fff);color:inherit}
+.hms-account-issued button{padding:11px 16px;border:0;border-radius:9px;background:#166534;color:#fff;font-weight:700;cursor:pointer}
+.hms-account-check{grid-column:1/-1;display:flex!important;grid-template-columns:none!important;align-items:center;gap:10px;font-size:13px!important}
+.hms-account-check input{width:18px;height:18px}
+.hms-account-warning{grid-column:1/-1;padding:12px;border-radius:9px;background:rgba(234,179,8,.12);color:#92400e;font-size:13px}
+.hms-account-empty{padding:28px;text-align:center;color:var(--muted,#64748b)}
+@media(max-width:640px){.hms-account-issued{grid-template-columns:1fr}.hms-account-issued>div{grid-column:auto}.hms-account-issued button{width:100%}}
