@@ -25,7 +25,6 @@ export async function loadWorkspaceRecords(moduleId:string){
   case "staff": {if(role!=="admin"&&role!=="receptionist")throw new Error("Not authorised.");const {data,error}=await supabase.from("staff_directory").select("id,full_name,staff_number,job_title,phone,email,is_active,department_id").eq("hospital_id",hospitalId).order("full_name").limit(limit);if(error)throw new Error(error.message);return data??[];}
   case "patients": {const {data,error}=await supabase.from("patients").select("id,patient_number,first_name,middle_name,last_name,phone,email,patient_category,record_status,date_of_birth,sex,created_at").eq("hospital_id",hospitalId).order("created_at",{ascending:false}).limit(limit);if(error)throw new Error(error.message);return data??[];}
   case "appointments": {const q=supabase.from("appointments").select("id,patient_id,department_id,requested_at,scheduled_at,reason,status,receptionist_notes").eq("hospital_id",hospitalId).order("requested_at",{ascending:false}).limit(limit);const {data,error}=await q;if(error)throw new Error(error.message);return data??[];}
-  case "cctv": {if(role!=="admin")throw new Error("Only Admin can manage CCTV inventory.");const {data,error}=await supabase.from("cctv_cameras").select("id,camera_name,location_label,integration_type,external_camera_id,is_enabled,created_at").eq("hospital_id",hospitalId).order("created_at",{ascending:false}).limit(limit);if(error)throw new Error(error.message);return data??[];}
   case "messages": {if(role!=="admin"&&role!=="receptionist")throw new Error("Not authorised.");const {data,error}=await supabase.from("patient_messages").select("id,patient_id,sender_type,message,created_at,read_at").eq("hospital_id",hospitalId).order("created_at",{ascending:false}).limit(limit);if(error)throw new Error(error.message);return data??[];}
   case "wards": {const {data,error}=await supabase.from("wards").select("id,name,ward_type,gender_policy,is_active").eq("hospital_id",hospitalId).order("name").limit(limit);if(error)throw new Error(error.message);return data??[];}
   case "queues": {const {data,error}=await supabase.from("department_visits").select("id,patient_id,encounter_id,department_id,status,priority,checked_in_at,started_at,completed_at,department_name_snapshot").eq("hospital_id",hospitalId).order("checked_in_at").limit(limit);if(error)throw new Error(error.message);return data??[];}
@@ -65,11 +64,6 @@ export async function createWorkspaceRecord(moduleId:string,values:FormValues){
   if(patientError||!patient)throw new Error("Select a valid patient from this hospital.");
   if(val("department_id")){const {data:department}=await supabase.from("departments").select("id").eq("hospital_id",hospitalId).eq("id",val("department_id")).maybeSingle();if(!department)throw new Error("Select a valid department from this hospital.");}
   const {error}=await supabase.from("appointments").insert({hospital_id:hospitalId,patient_id:val("patient_id"),department_id:optional("department_id"),scheduled_at:optional("scheduled_at"),reason:val("reason"),status:"requested",created_by:actorUserId});
-  if(error)throw new Error(error.message);
- }else if(moduleId==="cctv"){
-  if(role!=="admin")throw new Error("Only Admin can register CCTV equipment.");
-  if(!val("camera_name")||!val("location_label"))throw new Error("Camera name and approved location are required.");
-  const {error}=await supabase.from("cctv_cameras").insert({hospital_id:hospitalId,camera_name:val("camera_name"),location_label:val("location_label"),integration_type:optional("integration_type"),external_camera_id:optional("external_camera_id"),is_enabled:false});
   if(error)throw new Error(error.message);
  }else if(moduleId==="records"){
   if(role!=="staff")throw new Error("Clinical record entry is restricted to the Staff Portal.");
