@@ -382,6 +382,7 @@ export type Database = {
           completed_at: string | null
           created_at: string
           department_id: string
+          department_name_snapshot: string | null
           encounter_id: string
           hospital_id: string
           id: string
@@ -397,6 +398,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           department_id: string
+          department_name_snapshot?: string | null
           encounter_id: string
           hospital_id: string
           id?: string
@@ -412,6 +414,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           department_id?: string
+          department_name_snapshot?: string | null
           encounter_id?: string
           hospital_id?: string
           id?: string
@@ -1297,6 +1300,7 @@ export type Database = {
           content: Json
           created_at: string
           department_id: string | null
+          department_name_snapshot: string | null
           department_visit_id: string | null
           encounter_id: string
           hospital_id: string
@@ -1314,6 +1318,7 @@ export type Database = {
           content: Json
           created_at?: string
           department_id?: string | null
+          department_name_snapshot?: string | null
           department_visit_id?: string | null
           encounter_id: string
           hospital_id: string
@@ -1331,6 +1336,7 @@ export type Database = {
           content?: Json
           created_at?: string
           department_id?: string | null
+          department_name_snapshot?: string | null
           department_visit_id?: string | null
           encounter_id?: string
           hospital_id?: string
@@ -1477,6 +1483,63 @@ export type Database = {
           },
           {
             foreignKeyName: "patient_contacts_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_guardians: {
+        Row: {
+          can_book_appointments: boolean
+          can_view_records: boolean
+          created_at: string
+          created_by: string | null
+          guardian_auth_user_id: string
+          hospital_id: string
+          id: string
+          patient_id: string
+          relationship: string
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          can_book_appointments?: boolean
+          can_view_records?: boolean
+          created_at?: string
+          created_by?: string | null
+          guardian_auth_user_id: string
+          hospital_id: string
+          id?: string
+          patient_id: string
+          relationship: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          can_book_appointments?: boolean
+          can_view_records?: boolean
+          created_at?: string
+          created_by?: string | null
+          guardian_auth_user_id?: string
+          hospital_id?: string
+          id?: string
+          patient_id?: string
+          relationship?: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_guardians_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_guardians_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
@@ -1965,6 +2028,7 @@ export type Database = {
           completed_at: string | null
           created_at: string
           department_id: string
+          department_name_snapshot: string | null
           department_visit_id: string
           hospital_id: string
           id: string
@@ -1979,6 +2043,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           department_id: string
+          department_name_snapshot?: string | null
           department_visit_id: string
           hospital_id: string
           id?: string
@@ -1993,6 +2058,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           department_id?: string
+          department_name_snapshot?: string | null
           department_visit_id?: string
           hospital_id?: string
           id?: string
@@ -2141,11 +2207,60 @@ export type Database = {
           },
         ]
       }
+      referral_events: {
+        Row: {
+          actor_user_id: string | null
+          author_name: string | null
+          created_at: string
+          details: string | null
+          event_type: string
+          hospital_id: string
+          id: string
+          referral_id: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          author_name?: string | null
+          created_at?: string
+          details?: string | null
+          event_type: string
+          hospital_id: string
+          id?: string
+          referral_id: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          author_name?: string | null
+          created_at?: string
+          details?: string | null
+          event_type?: string
+          hospital_id?: string
+          id?: string
+          referral_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_events_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_events_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "referrals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       referrals: {
         Row: {
           completed_at: string | null
           created_at: string
           destination_department_id: string
+          destination_department_name_snapshot: string | null
           encounter_id: string
           hospital_id: string
           id: string
@@ -2157,12 +2272,14 @@ export type Database = {
           received_at: string | null
           referred_by: string | null
           source_department_id: string | null
+          source_department_name_snapshot: string | null
           status: string
         }
         Insert: {
           completed_at?: string | null
           created_at?: string
           destination_department_id: string
+          destination_department_name_snapshot?: string | null
           encounter_id: string
           hospital_id: string
           id?: string
@@ -2174,12 +2291,14 @@ export type Database = {
           received_at?: string | null
           referred_by?: string | null
           source_department_id?: string | null
+          source_department_name_snapshot?: string | null
           status?: string
         }
         Update: {
           completed_at?: string | null
           created_at?: string
           destination_department_id?: string
+          destination_department_name_snapshot?: string | null
           encounter_id?: string
           hospital_id?: string
           id?: string
@@ -2191,6 +2310,7 @@ export type Database = {
           received_at?: string | null
           referred_by?: string | null
           source_department_id?: string | null
+          source_department_name_snapshot?: string | null
           status?: string
         }
         Relationships: [
@@ -2346,6 +2466,7 @@ export type Database = {
           consciousness: string | null
           created_at: string
           department_id: string | null
+          department_name_snapshot: string | null
           department_visit_id: string | null
           diastolic_bp: number | null
           encounter_id: string
@@ -2374,6 +2495,7 @@ export type Database = {
           consciousness?: string | null
           created_at?: string
           department_id?: string | null
+          department_name_snapshot?: string | null
           department_visit_id?: string | null
           diastolic_bp?: number | null
           encounter_id: string
@@ -2402,6 +2524,7 @@ export type Database = {
           consciousness?: string | null
           created_at?: string
           department_id?: string | null
+          department_name_snapshot?: string | null
           department_visit_id?: string | null
           diastolic_bp?: number | null
           encounter_id?: string
