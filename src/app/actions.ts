@@ -33,12 +33,19 @@ export async function signInPortal(role: PortalRole, username: string, password:
 export async function getPortalAccountSetupStatus() {
   const session = await getPortalSession(["admin"]);
   if (!session) throw new Error("Administrator sign-in is required.");
+  let hospitalWorkspaceConfigured = false;
+  const hospitalId = process.env.HMS_HOSPITAL_ID?.trim() || "";
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(hospitalId)) {
+    const admin = createAdminClient();
+    const { data } = await admin.from("hospitals").select("id,status").eq("id", hospitalId).maybeSingle();
+    hospitalWorkspaceConfigured = data?.status === "active";
+  }
   return {
     admin: portalCredentialsStatus("admin"),
     receptionist: portalCredentialsStatus("receptionist"),
     staff: portalCredentialsStatus("staff"),
     patient: portalCredentialsStatus("patient"),
-    hospitalWorkspaceConfigured: Boolean(process.env.HMS_HOSPITAL_ID?.trim()),
+    hospitalWorkspaceConfigured,
     cctvBridgeConfigured: Boolean(process.env.CCTV_DISCOVERY_BRIDGE_URL?.trim() && process.env.CCTV_DISCOVERY_BRIDGE_TOKEN?.trim()),
   };
 }
