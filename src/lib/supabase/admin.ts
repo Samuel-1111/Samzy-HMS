@@ -3,11 +3,15 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 
 export function createAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const secretKey = process.env.SUPABASE_SECRET_KEY?.trim() || process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  // SUPABASE_URL is the canonical server-side URL. Keep the NEXT_PUBLIC
+  // fallback for existing Vercel deployments and local development.
+  const url = process.env.SUPABASE_URL?.trim() || process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const secretKey =
+    process.env.SUPABASE_SECRET_KEY?.trim() ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 
   if (!url || !secretKey) {
-    throw new Error("Server-side Supabase secret configuration is missing.");
+    throw new Error("Server-side Supabase URL or secret key is missing.");
   }
 
   return createSupabaseClient<Database>(url, secretKey, {
