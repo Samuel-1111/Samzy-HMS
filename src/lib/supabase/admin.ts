@@ -1,4 +1,4 @@
-// SERVER ONLY. Never import this module from a Client Component or expose its key.
+import "server-only";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 
