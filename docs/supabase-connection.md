@@ -12,8 +12,8 @@ Set these values in local `.env.local` and the Vercel project:
 
 - `SUPABASE_URL` — the Supabase Project URL. Used by trusted server-side code.
 - `NEXT_PUBLIC_SUPABASE_URL` — the exact same Project URL. Required by browser and SSR clients because browser code cannot read server-only environment variables.
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — the project's publishable key. This is designed for browser use; database access must still be protected by RLS.
-- `SUPABASE_SECRET_KEY` — server-only secret key used by trusted server-side account provisioning and privileged database operations. Never prefix it with `NEXT_PUBLIC_`, expose it to browser code, or commit its value.
+- `SUPABASE_PUBLISHABLE_KEY` — the project's publishable key. This is designed for browser use; the app exposes this specific non-secret value to the browser through `next.config.ts`. Database access must still be protected by RLS.
+- `SUPABASE_SECRET_KEY` — server-only secret key used by trusted server-side account provisioning and privileged database operations. Never prefix it with `NEXT_PUBLIC_`, expose it to the browser, or commit its value.
 
 The two URL variables must contain the same URL. The server-side admin client reads `SUPABASE_URL` first and retains `NEXT_PUBLIC_SUPABASE_URL` as a compatibility fallback.
 
@@ -31,7 +31,7 @@ Bootstrap is one-time and will refuse to create another tenant if a hospital row
 
 ## Security
 
-Never put `SUPABASE_SECRET_KEY`, `HMS_BOOTSTRAP_TOKEN`, or portal passwords in GitHub, frontend code, screenshots, or chat. Store them in Vercel Project Settings → Environment Variables or an approved password manager. Only the URL and publishable key may be exposed to browser code.
+Never put `SUPABASE_SECRET_KEY`, `HMS_BOOTSTRAP_TOKEN`, or portal passwords in GitHub, frontend code, screenshots, or chat. Store them in Vercel Project Settings → Environment Variables or an approved password manager. The URL and publishable key may be exposed to browser code; the secret key must remain server-only.
 
 ## Health endpoint
 
