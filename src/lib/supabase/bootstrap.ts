@@ -1,5 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { Json } from "@/types/database";
 import { provisionHospitalUser } from "@/lib/supabase/provisioning";
 
 type BootstrapHospitalInput = {
@@ -9,12 +10,14 @@ type BootstrapHospitalInput = {
   timezone?: string;
   phone?: string;
   email?: string;
-  address?: Record<string, unknown>;
+  address?: Json;
   initialAdmin: {
     displayName: string;
     password: string;
     email?: string;
     phone?: string;
+    emailVerified?: boolean;
+    phoneVerified?: boolean;
   };
 };
 
@@ -50,6 +53,8 @@ export async function bootstrapHospital(input: BootstrapHospitalInput) {
       password: input.initialAdmin.password,
       email: input.initialAdmin.email,
       phone: input.initialAdmin.phone,
+      emailVerified: input.initialAdmin.emailVerified,
+      phoneVerified: input.initialAdmin.phoneVerified,
     });
     return { hospitalId: hospital.id, adminUserId: account.userId };
   } catch (cause) {
