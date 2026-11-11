@@ -50,7 +50,7 @@ export function AccountManager(){
     <label>Username<input required minLength={3} maxLength={32} pattern="[a-z0-9][a-z0-9._-]{2,31}" value={username} onChange={e=>setUsername(e.target.value.toLowerCase())} placeholder={role==="staff"?"staff":"e.g. reception.jane"}/></label>
     <label>Email address<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Verified email address"/></label>
     <label>Phone number<input type="tel" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+234..."/></label>
-    <label className="hms-account-check"><input type="checkbox" checked={verified} onChange={e=>setVerified(e.target.checked)}/> I have verified this person's identity and contact details before issuing access.</label>
+    <label className="hms-account-check"><input type="checkbox" checked={verified} onChange={e=>setVerified(e.target.checked)}/> I have verified this person&apos;s identity and contact details before issuing access.</label>
     {role==="staff"&&staffExists&&<p className="hms-account-warning">The shared Staff Portal account already exists. Do not create a second shared login.</p>}
     <div className="hms-form-actions"><button type="submit" className="hms-primary" disabled={busy||(role==="staff"&&staffExists)}>{busy?"Creating account…":"Create account & generate temporary password →"}</button></div>
    </form>
