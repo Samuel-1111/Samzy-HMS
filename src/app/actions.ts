@@ -9,17 +9,29 @@ import { redirect } from "next/navigation";
 const destinations: Record<string, string> = { admin: "/admin", receptionist: "/reception", staff: "/staff", patient: "/patient" };
 const internalAuthEmail = (username: string) => username.toLowerCase() + "@accounts.samzy-hms.invalid";
 
+function configuredAdminCredentials() {
+  return {
+    username: (process.env.admin_username ?? process.env.ADMIN_USERNAME ?? "").trim().toLowerCase(),
+    password: process.env.admin_password ?? process.env.ADMIN_PASSWORD ?? "",
+  };
+}
+
+function constantTimeMatch(suppliedValue: string, expectedValue: string) {
+  const supplied = Buffer.from(suppliedValue, "utf8");
+  const expected = Buffer.from(expectedValue, "utf8");
+  return supplied.length === expected.length && timingSafeEqual(supplied, expected);
+}
+
 async function provisionFirstAdminFromEnvironment(username: string, password: string) {
-  const configuredUsername = process.env.admin_username?.trim().toLowerCase() ?? "";
-  const configuredPassword = process.env.admin_password ?? "";
-  if (!configuredUsername || !configuredPassword || username.toLowerCase() !== configuredUsername) return false;
-  const supplied = Buffer.from(password, "utf8");
-  const expected = Buffer.from(configuredPassword, "utf8");
-  if (supplied.length !== expected.length || !timingSafeEqual(supplied, expected)) return false;
+  const configured = configuredAdminCredentials();
+  if (!configured.username || !configured.password || username.toLowerCase() !== configured.username) return false;
+  if (!constantTimeMatch(password, configured.password)) return false;
+
   const admin = createAdminClient();
   const { count, error } = await admin.from("hospitals").select("id", { count: "exact", head: true });
-  if (error) throw new Error("Unable to verify the HMS initial setup state.");
+  if (error) throw new Error("HMS_INITIAL_SETUP_CHECK_FAILED");
   if ((count ?? 0) > 0) return false;
+
   await bootstrapHospital({
     slug: "samzy-hms-test",
     legalName: "Samzy HMS Test Environment",
@@ -27,65 +39,80 @@ async function provisionFirstAdminFromEnvironment(username: string, password: st
     timezone: "Africa/Lagos",
     initialAdmin: {
       displayName: "Samzy HMS Administrator",
-      loginUsername: configuredUsername,
-      password: configuredPassword,
-      authEmail: internalAuthEmail(configuredUsername),
+      loginUsername: configured.username,
+      password: configured.password,
+      authEmail: internalAuthEmail(configured.username),
     },
   });
   return true;
 }
 
 export async function signInPortal(identifier: string, password: string) {
-  const value = identifier.trim();
-  if (!value || !password) return { error: "Enter your username and password." };
-  const supabase = await createClient();
-  let credentials: { email: string; password: string } | { phone: string; password: string };
+  try {
+    const value = identifier.trim();
+    if (!value || !password) return { error: "Enter your username and password." };
+    const supabase = await createClient();
+    let credentials: { email: string; password: string } | { phone: string; password: string };
 
-  if (value.includes("@")) {
-    credentials = { email: value.toLowerCase(), password };
-  } else if (/^[+0-9()\s-]{8,20}$/.test(value)) {
-    const phone = value.replace(/[()\s-]/g, "");
-    credentials = { phone: phone.startsWith("0") && phone.length === 11 ? "+234" + phone.slice(1) : phone.startsWith("234") ? "+" + phone : phone, password };
-  } else {
-    const admin = createAdminClient();
-    const { data: profile, error } = await admin.from("user_profiles")
-      .select("email,phone,login_username,is_active").eq("login_username", value.toLowerCase()).maybeSingle();
-    if (!profile && !error) {
-      try {
-        const created = await provisionFirstAdminFromEnvironment(value, password);
-        if (created) credentials = { email: internalAuthEmail(value), password };
-        else return { error: "Invalid username or password." };
-      } catch {
-        return { error: "Initial administrator setup could not be completed. Check the server configuration and try again." };
-      }
+    if (value.includes("@")) {
+      credentials = { email: value.toLowerCase(), password };
+    } else if (/^[+0-9()\\s-]{8,20}$/.test(value)) {
+      const phone = value.replace(/[()\\s-]/g, "");
+      credentials = { phone: phone.startsWith("0") && phone.length === 11 ? "+234" + phone.slice(1) : phone.startsWith("234") ? "+" + phone : phone, password };
     } else {
-      if (error || !profile || !profile.is_active) return { error: "Invalid username or password." };
-      credentials = profile.email ? { email: profile.email, password }
-        : profile.phone ? { phone: profile.phone, password }
-        : { email: internalAuthEmail(profile.login_username ?? value), password };
+      // Bootstrap is attempted before profile lookup so the first Admin does not
+      // depend on an already-existing profile row.
+      let bootstrapped = false;
+      try {
+        bootstrapped = await provisionFirstAdminFromEnvironment(value, password);
+      } catch (cause) {
+        console.error("[HMS_AUTH] initial_admin_bootstrap_failed", {
+          code: cause instanceof Error ? cause.message : "UNKNOWN",
+        });
+        return { error: "The administrator account could not be initialised. Please contact the system administrator." };
+      }
+
+      if (bootstrapped) {
+        credentials = { email: internalAuthEmail(value), password };
+      } else {
+        const admin = createAdminClient();
+        const { data: profile, error } = await admin.from("user_profiles")
+          .select("email,phone,login_username,is_active")
+          .eq("login_username", value.toLowerCase()).maybeSingle();
+
+        if (error || !profile || !profile.is_active) return { error: "Invalid username or password." };
+        credentials = profile.email ? { email: profile.email, password }
+          : profile.phone ? { phone: profile.phone, password }
+          : { email: internalAuthEmail(profile.login_username ?? value), password };
+      }
     }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword(credentials);
+    if (signInError) return { error: "Invalid username or password." };
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      await supabase.auth.signOut();
+      return { error: "Unable to verify this account. Please sign in again." };
+    }
+
+    const role = String(user.app_metadata?.role ?? "");
+    const hospitalId = String(user.app_metadata?.hospital_id ?? "");
+    const { data: profile, error: profileError } = await supabase.from("user_profiles")
+      .select("role,hospital_id,is_active,must_change_password")
+      .eq("auth_user_id", user.id).maybeSingle();
+
+    if (profileError || !profile || !profile.is_active || profile.role !== role || profile.hospital_id !== hospitalId || !destinations[role]) {
+      await supabase.auth.signOut();
+      return { error: "This account is inactive or not authorised for Samzy HMS." };
+    }
+    return { destination: profile.must_change_password ? "/change-password" : destinations[role] };
+  } catch (cause) {
+    console.error("[HMS_AUTH] sign_in_unexpected_failure", {
+      code: cause instanceof Error ? cause.message : "UNKNOWN",
+    });
+    return { error: "We could not complete sign-in. Please try again or contact the system administrator." };
   }
-
-  const { error: signInError } = await supabase.auth.signInWithPassword(credentials);
-  if (signInError) return { error: "Invalid username or password." };
-
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError || !user) {
-    await supabase.auth.signOut();
-    return { error: "Unable to verify this account. Please try again." };
-  }
-
-  const role = String(user.app_metadata?.role ?? "");
-  const hospitalId = String(user.app_metadata?.hospital_id ?? "");
-  const { data: profile, error: profileError } = await supabase.from("user_profiles")
-    .select("role,hospital_id,is_active,must_change_password")
-    .eq("auth_user_id", user.id).maybeSingle();
-
-  if (profileError || !profile || !profile.is_active || profile.role !== role || profile.hospital_id !== hospitalId || !destinations[role]) {
-    await supabase.auth.signOut();
-    return { error: "This account is inactive or not authorised for Samzy HMS." };
-  }
-  return { destination: profile.must_change_password ? "/change-password" : destinations[role] };
 }
 
 export async function signOut() {
