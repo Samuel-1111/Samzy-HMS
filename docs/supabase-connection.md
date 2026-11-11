@@ -47,6 +47,15 @@ Realtime publication includes appointments, department visits, queue entries, re
 
 `GET /api/health/supabase` performs a non-mutating request against the published-content API to verify the configured API endpoint is reachable. It does not prove Auth, RLS role claims, private Storage, or clinical workflows are ready.
 
+## Generated identifiers
+
+Patient, encounter and invoice identifiers are allocated with tenant-scoped atomic counters using the hospital timezone:
+- Patient: `SH-YYYY-000001`
+- Encounter: `ENC-YYYY-000001`
+- Invoice: `INV-YYYY-000001`
+
+A transaction-level test verified sequential allocation and was rolled back; no test tenant or counter row remains.
+
 ## Data state
 
 All 44 public tables were verified with RLS enabled and zero rows immediately after schema creation. No Divine Blossom project or data is used by Samzy HMS.
