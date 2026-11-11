@@ -9,6 +9,7 @@ export default function LoginForm() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -26,13 +27,13 @@ export default function LoginForm() {
 
   return (
     <form className="login-form" onSubmit={submit}>
-      <label htmlFor="login-identifier">Username, email address or phone number</label>
-      <input id="login-identifier" autoComplete="username" required value={identifier} onChange={(event) => setIdentifier(event.target.value)} placeholder="Enter your username" />
+      <label htmlFor="login-identifier">Administrator username</label>
+      <input id="login-identifier" autoComplete="username" required value={identifier} onChange={(event) => setIdentifier(event.target.value)} placeholder="Enter administrator username" />
       <label htmlFor="login-password">Password</label>
-      <input id="login-password" type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Your password" />
+      <div className="login-password-wrap"><input id="login-password" type={showPassword ? "text" : "password"} autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" /><button type="button" className="login-password-toggle" onClick={() => setShowPassword(value => !value)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? "Hide" : "Show"}</button></div>
       {error ? <p className="login-error" role="alert">{error}</p> : null}
       <button type="submit" disabled={busy}>{busy ? "Verifying…" : "Secure sign in"}</button>
-      <small>Use the credentials issued by your hospital administrator. First-time users must change their temporary password.</small>
+      <small>Administrator credentials are verified securely on the server.</small>
     </form>
   );
 }
