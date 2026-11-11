@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 function normalizeNigerianPhone(value: string) {
-  const trimmed = value.replace(/[\\s()-]/g, "");
+  const trimmed = value.split(" ").join("").replaceAll("(", "").replaceAll(")", "").replaceAll("-", "");
   if (trimmed.startsWith("0") && trimmed.length === 11) return `+234${trimmed.slice(1)}`;
   if (trimmed.startsWith("234")) return `+${trimmed}`;
   return trimmed;
