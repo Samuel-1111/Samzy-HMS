@@ -1,27 +1,19 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getPortalSession, type PortalRole } from "@/lib/auth/admin-session";
 
-export type AppRole = "admin" | "receptionist" | "staff" | "patient";
+export type AppRole = PortalRole;
 
 export async function requireRole(allowedRoles: AppRole[]) {
-  const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) redirect("/login");
-
-  const role = user.app_metadata?.role as AppRole | undefined;
-  const hospitalId = user.app_metadata?.hospital_id as string | undefined;
-  if (!role || !hospitalId || !allowedRoles.includes(role)) redirect("/unauthorized");
-
-  const { data: profile, error: profileError } = await supabase
-    .from("user_profiles")
-    .select("display_name,is_active,role,hospital_id,must_change_password")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
-
-  if (profileError || !profile || !profile.is_active || profile.role !== role || profile.hospital_id !== hospitalId) {
-    await supabase.auth.signOut();
-    redirect("/login?reason=account-unavailable");
-  }
-  if (profile.must_change_password) redirect("/change-password");
-  return { user, profile };
+  const session = await getPortalSession(allowedRoles);
+  if (!session) redirect("/login");
+  const names: Record<PortalRole, string> = {
+    admin: "Administrator",
+    receptionist: "Receptionist",
+    staff: "Staff",
+    patient: "Patient",
+  };
+  return {
+    user: { id: session.username, app_metadata: { role: session.role } },
+    profile: { display_name: names[session.role], is_active: true, role: session.role },
+  };
 }

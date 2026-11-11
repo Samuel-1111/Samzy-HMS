@@ -1,31 +1,32 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getPortalSession } from "@/lib/auth/admin-session";
 
 type Role="admin"|"receptionist"|"staff"|"patient";
 type FormValues=Record<string,string|boolean|undefined>;
 async function context(allowed:Role[]){
- const supabase=await createClient();
- const {data:{user},error}=await supabase.auth.getUser();
- if(error||!user) throw new Error("Your session has expired. Sign in again.");
- const role=user.app_metadata?.role as Role|undefined;
- const hospitalId=user.app_metadata?.hospital_id as string|undefined;
- if(!role||!hospitalId||!allowed.includes(role)) throw new Error("You do not have permission to perform this action.");
- const {data:profile}=await supabase.from("user_profiles").select("is_active,role,hospital_id,must_change_password").eq("auth_user_id",user.id).maybeSingle();
- if(!profile?.is_active||profile.role!==role||profile.hospital_id!==hospitalId) throw new Error("Your account is inactive or unavailable.");
- if(profile.must_change_password) throw new Error("Change your temporary password before using the portal.");
- return {supabase,user,role,hospitalId};
+ const session=await getPortalSession(allowed);
+ if(!session) throw new Error("Your portal session has expired. Sign in again.");
+ if(session.role==="patient") throw new Error("Individual patient identity has not been configured. Patient records remain locked until individual patient accounts are provisioned.");
+ const hospitalId=process.env.HMS_HOSPITAL_ID?.trim()||"";
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(hospitalId)) throw new Error("Hospital workspace is not configured. Set HMS_HOSPITAL_ID in Vercel after the hospital tenant has been formally provisioned.");
+ const supabase=createAdminClient();
+ const {data:hospital,error:hospitalError}=await supabase.from("hospitals").select("id,status").eq("id",hospitalId).maybeSingle();
+ if(hospitalError) throw new Error("Unable to verify the hospital workspace: "+hospitalError.message);
+ if(!hospital||hospital.status!=="active") throw new Error("The configured hospital workspace does not exist or is suspended. No records were changed.");
+ return {supabase,actorUserId:null as string|null,role:session.role,hospitalId};
 }
 export async function loadWorkspaceRecords(moduleId:string){
- const {supabase,hospitalId,role}=await context(["admin","receptionist","staff","patient"]);
+ const {supabase,hospitalId,role}=await context(["admin","receptionist","staff"]);
  const limit=75;
  switch(moduleId){
   case "departments": {const {data,error}=await supabase.from("departments").select("id,name,code,description,is_active,created_at").eq("hospital_id",hospitalId).order("name").limit(limit);if(error)throw new Error(error.message);return data??[];}
   case "staff": {if(role!=="admin"&&role!=="receptionist")throw new Error("Not authorised.");const {data,error}=await supabase.from("staff_directory").select("id,full_name,staff_number,job_title,phone,email,is_active,department_id").eq("hospital_id",hospitalId).order("full_name").limit(limit);if(error)throw new Error(error.message);return data??[];}
-  case "patients": {if(role==="patient"){const {data,error}=await supabase.from("patients").select("id,patient_number,first_name,middle_name,last_name,phone,email,patient_category,record_status,date_of_birth,sex").eq("hospital_id",hospitalId).eq("auth_user_id",(await supabase.auth.getUser()).data.user!.id).limit(1);if(error)throw new Error(error.message);return data??[];}const {data,error}=await supabase.from("patients").select("id,patient_number,first_name,middle_name,last_name,phone,email,patient_category,record_status,date_of_birth,sex,created_at").eq("hospital_id",hospitalId).order("created_at",{ascending:false}).limit(limit);if(error)throw new Error(error.message);return data??[];}
+  case "patients": {const {data,error}=await supabase.from("patients").select("id,patient_number,first_name,middle_name,last_name,phone,email,patient_category,record_status,date_of_birth,sex,created_at").eq("hospital_id",hospitalId).order("created_at",{ascending:false}).limit(limit);if(error)throw new Error(error.message);return data??[];}
   case "appointments": {const q=supabase.from("appointments").select("id,patient_id,department_id,requested_at,scheduled_at,reason,status,receptionist_notes").eq("hospital_id",hospitalId).order("requested_at",{ascending:false}).limit(limit);const {data,error}=await q;if(error)throw new Error(error.message);return data??[];}
   case "cctv": {if(role!=="admin")throw new Error("Only Admin can manage CCTV inventory.");const {data,error}=await supabase.from("cctv_cameras").select("id,camera_name,location_label,integration_type,external_camera_id,is_enabled,created_at").eq("hospital_id",hospitalId).order("created_at",{ascending:false}).limit(limit);if(error)throw new Error(error.message);return data??[];}
-  case "messages": {if(role!=="admin"&&role!=="receptionist"&&role!=="patient")throw new Error("Not authorised.");const {data,error}=await supabase.from("patient_messages").select("id,patient_id,sender_type,message,created_at,read_at").eq("hospital_id",hospitalId).order("created_at",{ascending:false}).limit(limit);if(error)throw new Error(error.message);return data??[];}
+  case "messages": {if(role!=="admin"&&role!=="receptionist")throw new Error("Not authorised.");const {data,error}=await supabase.from("patient_messages").select("id,patient_id,sender_type,message,created_at,read_at").eq("hospital_id",hospitalId).order("created_at",{ascending:false}).limit(limit);if(error)throw new Error(error.message);return data??[];}
   case "wards": {const {data,error}=await supabase.from("wards").select("id,name,ward_type,gender_policy,is_active").eq("hospital_id",hospitalId).order("name").limit(limit);if(error)throw new Error(error.message);return data??[];}
   case "queues": {const {data,error}=await supabase.from("department_visits").select("id,patient_id,encounter_id,department_id,status,priority,checked_in_at,started_at,completed_at,department_name_snapshot").eq("hospital_id",hospitalId).order("checked_in_at").limit(limit);if(error)throw new Error(error.message);return data??[];}
   case "records": {const {data,error}=await supabase.from("medical_records").select("id,patient_id,encounter_id,department_id,author_name,author_role,title,record_type,patient_visible,recorded_at").eq("hospital_id",hospitalId).order("recorded_at",{ascending:false}).limit(limit);if(error)throw new Error(error.message);return data??[];}
@@ -39,7 +40,7 @@ export async function loadWorkspaceRecords(moduleId:string){
  }
 }
 export async function createWorkspaceRecord(moduleId:string,values:FormValues){
- const {supabase,user,hospitalId,role}=await context(["admin","receptionist","staff","patient"]);
+ const {supabase,actorUserId,hospitalId,role}=await context(["admin","receptionist","staff"]);
  const val=(key:string)=>String(values[key]??"").trim();
  const optional=(key:string)=>val(key)||null;
  if(moduleId==="departments"){
@@ -55,12 +56,15 @@ export async function createWorkspaceRecord(moduleId:string,values:FormValues){
  }else if(moduleId==="patients"){
   if(role!=="admin"&&role!=="receptionist")throw new Error("Only Reception or Admin can register patients.");
   if(!val("first_name")||!val("last_name"))throw new Error("Patient first and last name are required.");
-  const {error}=await supabase.from("patients").insert({hospital_id:hospitalId,patient_number:"",first_name:val("first_name"),middle_name:optional("middle_name"),last_name:val("last_name"),date_of_birth:optional("date_of_birth"),sex:(val("sex")||"not_recorded") as "female"|"male"|"intersex"|"unknown"|"not_recorded",phone:optional("phone"),email:optional("email"),patient_category:(val("patient_category")||"private") as "nhia"|"hmo"|"private"|"self_pay",record_status:"active",created_by:user.id});
+  const {error}=await supabase.from("patients").insert({hospital_id:hospitalId,patient_number:"",first_name:val("first_name"),middle_name:optional("middle_name"),last_name:val("last_name"),date_of_birth:optional("date_of_birth"),sex:(val("sex")||"not_recorded") as "female"|"male"|"intersex"|"unknown"|"not_recorded",phone:optional("phone"),email:optional("email"),patient_category:(val("patient_category")||"private") as "nhia"|"hmo"|"private"|"self_pay",record_status:"active",created_by:actorUserId});
   if(error)throw new Error(error.message);
  }else if(moduleId==="appointments"){
-  if(role!=="admin"&&role!=="receptionist"&&role!=="patient")throw new Error("Not authorised to request appointments.");
+  if(role!=="admin"&&role!=="receptionist")throw new Error("Only Reception or Admin can schedule appointments.");
   if(!val("patient_id")||!val("reason"))throw new Error("Patient ID and appointment reason are required.");
-  const {error}=await supabase.from("appointments").insert({hospital_id:hospitalId,patient_id:val("patient_id"),department_id:optional("department_id"),scheduled_at:optional("scheduled_at"),reason:val("reason"),status:"requested",created_by:user.id});
+  const {data:patient,error:patientError}=await supabase.from("patients").select("id").eq("hospital_id",hospitalId).eq("id",val("patient_id")).maybeSingle();
+  if(patientError||!patient)throw new Error("Select a valid patient from this hospital.");
+  if(val("department_id")){const {data:department}=await supabase.from("departments").select("id").eq("hospital_id",hospitalId).eq("id",val("department_id")).maybeSingle();if(!department)throw new Error("Select a valid department from this hospital.");}
+  const {error}=await supabase.from("appointments").insert({hospital_id:hospitalId,patient_id:val("patient_id"),department_id:optional("department_id"),scheduled_at:optional("scheduled_at"),reason:val("reason"),status:"requested",created_by:actorUserId});
   if(error)throw new Error(error.message);
  }else if(moduleId==="cctv"){
   if(role!=="admin")throw new Error("Only Admin can register CCTV equipment.");
@@ -70,13 +74,18 @@ export async function createWorkspaceRecord(moduleId:string,values:FormValues){
  }else if(moduleId==="records"){
   if(role!=="staff")throw new Error("Clinical record entry is restricted to the Staff Portal.");
   if(!val("patient_id")||!val("encounter_id")||!val("author_name")||!val("title")||!val("content"))throw new Error("Patient, encounter, author, title and note content are required.");
-  const {error}=await supabase.from("medical_records").insert({hospital_id:hospitalId,patient_id:val("patient_id"),encounter_id:val("encounter_id"),department_id:optional("department_id"),author_user_id:user.id,author_name:val("author_name"),author_role:"staff",title:val("title"),record_type:(val("record_type")||"clinical_note") as "consultation"|"clinical_note"|"nursing_note"|"assessment"|"procedure"|"discharge_summary"|"other",content:{note:val("content")},patient_visible:false});
+  const {data:patient}=await supabase.from("patients").select("id").eq("hospital_id",hospitalId).eq("id",val("patient_id")).maybeSingle();
+  const {data:encounter}=await supabase.from("encounters").select("id").eq("hospital_id",hospitalId).eq("id",val("encounter_id")).eq("patient_id",val("patient_id")).maybeSingle();
+  if(!patient||!encounter)throw new Error("Select a valid patient and one of that patient’s encounters.");
+  if(val("department_id")){const {data:department}=await supabase.from("departments").select("id").eq("hospital_id",hospitalId).eq("id",val("department_id")).maybeSingle();if(!department)throw new Error("Select a valid department from this hospital.");}
+  const {error}=await supabase.from("medical_records").insert({hospital_id:hospitalId,patient_id:val("patient_id"),encounter_id:val("encounter_id"),department_id:optional("department_id"),author_user_id:actorUserId,author_name:val("author_name"),author_role:"staff",title:val("title"),record_type:(val("record_type")||"clinical_note") as "consultation"|"clinical_note"|"nursing_note"|"assessment"|"procedure"|"discharge_summary"|"other",content:{note:val("content")},patient_visible:false});
   if(error)throw new Error(error.message);
  }else if(moduleId==="messages"){
-  if(role!=="admin"&&role!=="receptionist"&&role!=="patient")throw new Error("Staff cannot access patient messaging.");
+  if(role!=="admin"&&role!=="receptionist")throw new Error("Only Reception can manage patient messages.");
   if(!val("patient_id")||!val("message"))throw new Error("Patient ID and message are required.");
-  const sender=role==="patient"?"patient":"receptionist";
-  const {error}=await supabase.from("patient_messages").insert({hospital_id:hospitalId,patient_id:val("patient_id"),sender_type:sender,sender_user_id:user.id,message:val("message")});
+  const sender="receptionist";
+  const {data:patient}=await supabase.from("patients").select("id").eq("hospital_id",hospitalId).eq("id",val("patient_id")).maybeSingle();if(!patient)throw new Error("Select a valid patient from this hospital.");
+  const {error}=await supabase.from("patient_messages").insert({hospital_id:hospitalId,patient_id:val("patient_id"),sender_type:sender,sender_user_id:actorUserId,message:val("message")});
   if(error)throw new Error(error.message);
  }else if(moduleId==="wards"){
   if(role!=="admin"&&role!=="receptionist")throw new Error("Not authorised.");

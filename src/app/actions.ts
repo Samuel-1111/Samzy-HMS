@@ -1,128 +1,61 @@
 "use server";
 
-import { randomBytes, timingSafeEqual } from "node:crypto";
+import { randomBytes } from "node:crypto";
+import { redirect } from "next/navigation";
+import { clearPortalSession, createPortalSession, verifyPortalCredentials, portalCredentialsStatus, getPortalSession, type PortalRole } from "@/lib/auth/admin-session";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { bootstrapHospital } from "@/lib/supabase/bootstrap";
-import { redirect } from "next/navigation";
 
 const destinations: Record<string, string> = { admin: "/admin", receptionist: "/reception", staff: "/staff", patient: "/patient" };
 const internalAuthEmail = (username: string) => username.toLowerCase() + "@accounts.samzy-hms.invalid";
 
-function configuredAdminCredentials() {
-  return {
-    username: (process.env.admin_username?.trim() || process.env.ADMIN_USERNAME?.trim() || "").trim().toLowerCase(),
-    password: process.env.admin_password || process.env.ADMIN_PASSWORD || "",
-  };
-}
-
-function constantTimeMatch(suppliedValue: string, expectedValue: string) {
-  const supplied = Buffer.from(suppliedValue, "utf8");
-  const expected = Buffer.from(expectedValue, "utf8");
-  return supplied.length === expected.length && timingSafeEqual(supplied, expected);
-}
-
-async function provisionFirstAdminFromEnvironment(username: string, password: string) {
-  const configured = configuredAdminCredentials();
-  if (!configured.username || !configured.password || username.toLowerCase() !== configured.username) return false;
-  if (!constantTimeMatch(password, configured.password)) return false;
-
-  const admin = createAdminClient();
-  const { count, error } = await admin.from("hospitals").select("id", { count: "exact", head: true });
-  if (error) throw new Error("HMS_INITIAL_SETUP_CHECK_FAILED");
-  if ((count ?? 0) > 0) return false;
-
-  await bootstrapHospital({
-    slug: "samzy-hms-test",
-    legalName: "Samzy HMS Test Environment",
-    displayName: "Samzy HMS Test Workspace",
-    timezone: "Africa/Lagos",
-    initialAdmin: {
-      displayName: "Samzy HMS Administrator",
-      loginUsername: configured.username,
-      password: configured.password,
-      authEmail: internalAuthEmail(configured.username),
-    },
-  });
-  return true;
-}
-
-export async function signInPortal(identifier: string, password: string) {
+export async function signInPortal(role: PortalRole, username: string, password: string) {
+  if (!["admin", "receptionist", "staff", "patient"].includes(role)) return { error: "Select a valid portal." };
+  if (role === "patient") return { error: "Individual patient accounts are not ready yet. Shared Patient Portal credentials are disabled to protect private medical records." };
+  if (!username.trim() || !password) return { error: "Enter your username and password." };
+  const status = portalCredentialsStatus(role);
+  if (!status.configured) {
+    const label = role === "admin" ? "ADMIN" : role.toUpperCase();
+    return { error: `The ${role} login is not configured in Vercel. Add ${label}_USERNAME and ${label}_PASSWORD, then redeploy.` };
+  }
+  if (!verifyPortalCredentials(role, username, password)) return { error: "Incorrect username or password for this portal." };
   try {
-    const value = identifier.trim();
-    if (!value || !password) return { error: "Enter your username and password." };
-    const supabase = await createClient();
-    let credentials: { email: string; password: string } | { phone: string; password: string };
-
-    if (value.includes("@")) {
-      credentials = { email: value.toLowerCase(), password };
-    } else if (/^[+0-9()\s-]{8,20}$/.test(value)) {
-      const phone = value.replace(/[()\s-]/g, "");
-      credentials = { phone: phone.startsWith("0") && phone.length === 11 ? "+234" + phone.slice(1) : phone.startsWith("234") ? "+" + phone : phone, password };
-    } else {
-      // Bootstrap is attempted before profile lookup so the first Admin does not
-      // depend on an already-existing profile row.
-      let bootstrapped = false;
-      try {
-        bootstrapped = await provisionFirstAdminFromEnvironment(value, password);
-      } catch (cause) {
-        console.error("[HMS_AUTH] initial_admin_bootstrap_failed", {
-          code: cause instanceof Error ? cause.message : "UNKNOWN",
-        });
-        return { error: "The administrator account could not be initialised. Please contact the system administrator." };
-      }
-
-      if (bootstrapped) {
-        credentials = { email: internalAuthEmail(value), password };
-      } else {
-        const admin = createAdminClient();
-        const { data: profile, error } = await admin.from("user_profiles")
-          .select("email,phone,login_username,is_active")
-          .eq("login_username", value.toLowerCase()).maybeSingle();
-
-        if (error) throw new Error("HMS_PROFILE_LOOKUP_FAILED");
-        if (!profile || !profile.is_active) return { error: "Invalid username or password." };
-        credentials = profile.email ? { email: profile.email, password }
-          : profile.phone ? { phone: profile.phone, password }
-          : { email: internalAuthEmail(profile.login_username ?? value), password };
-      }
-    }
-
-    const { error: signInError } = await supabase.auth.signInWithPassword(credentials);
-    if (signInError) {
-      if (signInError.status === 400 || signInError.status === 401) return { error: "Invalid username or password." };
-      console.error("[HMS_AUTH] provider_sign_in_failed", { status: signInError.status, code: signInError.code ?? "UNKNOWN" });
-      return { error: "Sign-in is temporarily unavailable. Please try again shortly." };
-    }
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      await supabase.auth.signOut();
-      return { error: "Unable to verify this account. Please sign in again." };
-    }
-
-    const role = String(user.app_metadata?.role ?? "");
-    const hospitalId = String(user.app_metadata?.hospital_id ?? "");
-    const { data: profile, error: profileError } = await supabase.from("user_profiles")
-      .select("role,hospital_id,is_active,must_change_password")
-      .eq("auth_user_id", user.id).maybeSingle();
-
-    if (profileError || !profile || !profile.is_active || profile.role !== role || profile.hospital_id !== hospitalId || !destinations[role]) {
-      await supabase.auth.signOut();
-      return { error: "This account is inactive or not authorised for Samzy HMS." };
-    }
-    return { destination: profile.must_change_password ? "/change-password" : destinations[role] };
-  } catch (cause) {
-    console.error("[HMS_AUTH] sign_in_unexpected_failure", {
-      code: cause instanceof Error ? cause.message : "UNKNOWN",
-    });
-    return { error: "We could not complete sign-in. Please try again or contact the system administrator." };
+    await createPortalSession(role, username);
+    const destinations: Record<PortalRole, string> = { admin: "/admin", receptionist: "/reception", staff: "/staff", patient: "/patient" };
+    return { destination: destinations[role] };
+  } catch (error) {
+    console.error("[HMS_AUTH] portal_session_creation_failed", { role, code: error instanceof Error ? error.message : "UNKNOWN" });
+    return { error: "The server could not create your secure session. Check the Vercel deployment logs and confirm the portal environment variables are available to this deployment." };
   }
 }
 
+
+export async function getPortalAccountSetupStatus() {
+  const session = await getPortalSession(["admin"]);
+  if (!session) throw new Error("Administrator sign-in is required.");
+  let hospitalWorkspaceConfigured = false;
+  const hospitalId = process.env.HMS_HOSPITAL_ID?.trim() || "";
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(hospitalId)) {
+    try {
+      const admin = createAdminClient();
+      const { data } = await admin.from("hospitals").select("id,status").eq("id", hospitalId).maybeSingle();
+      hospitalWorkspaceConfigured = data?.status === "active";
+    } catch {
+      hospitalWorkspaceConfigured = false;
+    }
+  }
+  return {
+    admin: portalCredentialsStatus("admin"),
+    receptionist: portalCredentialsStatus("receptionist"),
+    staff: portalCredentialsStatus("staff"),
+    patient: portalCredentialsStatus("patient"),
+    hospitalWorkspaceConfigured,
+    cctvBridgeConfigured: Boolean(process.env.CCTV_DISCOVERY_BRIDGE_URL?.trim() && process.env.CCTV_DISCOVERY_BRIDGE_TOKEN?.trim()),
+  };
+}
+
 export async function signOut() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  await clearPortalSession();
   redirect("/login");
 }
 
