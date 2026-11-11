@@ -1,13 +1,45 @@
 import Link from "next/link";
-import {hospital} from "@/lib/hospital";
-import AppointmentRequest from "@/components/AppointmentRequest";
-const portals=[["Admin Portal","Hospital-wide administration, security and reports","/admin","AD"],["Reception Portal","Registration, appointments and front desk","/reception","RE"],["Staff Portal","Nursing, consultations and department workflows","/staff","ST"],["Patient Portal","Appointments, released records and messages","/patient","PT"]] as const;
-export default function Home(){return <main className="public-site"><header className="public-header"><Link href="/" className="public-logo"><span className="brand-icon">C</span><span><b>{hospital.name}</b><small>PASSION TO CARE, SKILL TO HEAL</small></span></Link><nav><a href="#about">About</a><a href="#services">Services</a><a href="#contact">Contact</a><Link href="/patient" className="header-login">Patient portal ↗</Link></nav></header>
-<section className="hero"><div className="hero-copy"><span className="eyebrow">WELCOME TO COXWELL SPECIALIST HOSPITAL</span><h1>Compassionate care.<br/><i>Specialist expertise.</i></h1><p>Dedicated healthcare services with a patient-first approach in Abeokuta, Ogun State.</p><div className="hero-actions"><a href="#appointment" className="button-primary">Request an appointment</a><a href="#services" className="button-outline">Explore our services</a></div><div className="hero-trust"><span>✦ Patient-centred care</span><span>✦ Specialist services</span><span>✦ Abeokuta, Ogun State</span></div></div><div className="hero-visual"><div className="hero-image-card"><div className="image-orbit orbit-one"></div><div className="image-orbit orbit-two"></div><div className="medical-cross">✚</div><div className="hero-image-caption"><span>YOUR HEALTH MATTERS</span><b>Care that puts you first.</b></div></div><div className="floating-note"><span>✚</span><div><b>Here for your health</b><small>Care with compassion</small></div></div></div></section>
-<AppointmentRequest/>
-<section className="public-stats"><div><b>01</b><span>Patient-first approach</span></div><div><b>02</b><span>Specialist care services</span></div><div><b>03</b><span>Located in Abeokuta</span></div></section>
-<section id="about" className="public-section about-section"><div><span className="eyebrow">ABOUT COXWELL</span><h2>Healthcare with <i>purpose.</i></h2></div><div><p>{hospital.name} is based in Abeokuta, Ogun State. Its published message, “Passion to care, skill to heal,” reflects a commitment to compassionate healthcare.</p><p className="muted">This demonstration website uses publicly listed hospital information. Content, imagery, service descriptions and appointment workflows require review and approval by the hospital before publication.</p></div></section>
-<section id="services" className="public-section services-section"><div className="section-heading"><div><span className="eyebrow">WHAT WE OFFER</span><h2>Our healthcare <i>services.</i></h2></div><p>Explore selected services published by the hospital. Contact the hospital to confirm availability and appointment requirements.</p></div><div className="service-grid">{hospital.services.map((s,i)=><article className="service-card" key={s}><span>{["✚","♡","⌖","♧","⚕","＋","✦","◎"][i%8]}</span><h3>{s}</h3><p>Speak with the hospital team for information, availability and guidance.</p></article>)}</div></section>
-<section className="portal-entry"><div><span className="eyebrow">DIGITAL HOSPITAL SERVICES</span><h2>Access your <i>portal.</i></h2><p>Choose the workspace that matches your role. Portal screens are currently frontend demonstrations; secure sign-in will be connected during backend integration.</p></div><div className="portal-entry-grid">{portals.map(p=><Link href={p[2]} key={p[0]} className="portal-entry-card"><span>{p[3]}</span><div><b>{p[0]}</b><small>{p[1]}</small></div><strong>↗</strong></Link>)}</div></section>
-<section id="contact" className="contact-section"><div><span className="eyebrow">GET IN TOUCH</span><h2>We’re here to <i>help.</i></h2><p>For appointments, enquiries and service availability, contact the hospital directly.</p></div><div className="contact-details"><a href={"tel:"+hospital.phone}><small>CALL THE HOSPITAL</small><b>{hospital.phone}</b></a><a href={"mailto:"+hospital.email}><small>EMAIL</small><b>{hospital.email}</b></a><div><small>VISIT</small><b>{hospital.address}</b></div><a href={hospital.website} target="_blank" rel="noreferrer"><small>OFFICIAL WEBSITE</small><b>{hospital.website}</b></a></div></section>
-<footer className="public-footer"><div className="public-logo"><span className="brand-icon">C</span><span><b>{hospital.name}</b><small>Abeokuta, Ogun State, Nigeria</small></span></div><p>© 2026 {hospital.name}. Demonstration frontend by Samzy Technology.</p><small>Independent prototype, not an official hospital website or endorsement by the hospital.</small></footer></main>}
+
+const checks = [
+  ["Database schema", "Provisioned", "done"],
+  ["Row-level security", "Enabled on all 44 tables", "done"],
+  ["Hospital tenant and user accounts", "Not configured", "pending"],
+  ["Secure portal authentication", "Pending integration", "pending"],
+  ["Clinical workflows and acceptance tests", "Pending implementation", "pending"],
+];
+
+export default function Home() {
+  return (
+    <main className="setup-home">
+      <header className="setup-header">
+        <Link href="/" className="setup-brand"><span>S</span><b>SAMZY HMS</b></Link>
+        <small>BUILT BY SAMZY TECHNOLOGY</small>
+      </header>
+      <section className="setup-hero">
+        <div className="setup-eyebrow">HOSPITAL OPERATIONS PLATFORM</div>
+        <h1>Samzy HMS</h1>
+        <p>A secure, configurable foundation for hospital administration, reception, clinical teams and patient services.</p>
+        <div className="setup-state"><i /> DATABASE FOUNDATION PROVISIONED</div>
+      </section>
+      <section className="setup-panel">
+        <div className="setup-panel-heading">
+          <div><span>IMPLEMENTATION STATUS</span><h2>System readiness</h2></div>
+          <b>EMPTY DATABASE</b>
+        </div>
+        <div className="setup-check-list">
+          {checks.map(([name, status, state]) => (
+            <div className="setup-check" key={name}>
+              <span className={state === "done" ? "setup-check-icon done" : "setup-check-icon"}>{state === "done" ? "✓" : "○"}</span>
+              <b>{name}</b><small>{status}</small>
+            </div>
+          ))}
+        </div>
+        <p className="setup-warning">
+          Portal access is intentionally locked until authentication and server-side authorisation are connected.
+          No hospital has been configured and no operational or sample data exists.
+        </p>
+      </section>
+      <footer className="setup-footer">Samzy HMS · Built by Samzy Technology · Not yet approved for clinical production use</footer>
+    </main>
+  );
+}
