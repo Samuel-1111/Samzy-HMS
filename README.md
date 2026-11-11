@@ -47,7 +47,7 @@ Requires Node.js 22+ and npm.
     cp .env.example .env.local
     npm run dev
 
-The publishable key is safe for public application configuration. Never expose `SUPABASE_SECRET_KEY` or `HMS_BOOTSTRAP_TOKEN` in browser code or a `NEXT_PUBLIC_*` variable.
+The publishable key is safe for public application configuration. Never expose `SUPABASE_SECRET_KEY` or `HMS_BOOTSTRAP_TOKEN` in browser code or a `NEXT_PUBLIC_*` variable. Portal login uses Supabase Auth and the tenant-scoped `user_profiles` table; do not configure shared Vercel username/password credentials.
 
 ## Quality checks
 
