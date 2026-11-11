@@ -6,14 +6,16 @@ export type AppRole = PortalRole;
 export async function requireRole(allowedRoles: AppRole[]) {
   const session = await getPortalSession(allowedRoles);
   if (!session) redirect("/login");
-  const names: Record<PortalRole, string> = {
-    admin: "Administrator",
-    receptionist: "Receptionist",
-    staff: "Staff",
-    patient: "Patient",
-  };
+  if (session.mustChangePassword) redirect("/account/change-password");
   return {
-    user: { id: session.username, app_metadata: { role: session.role } },
-    profile: { display_name: names[session.role], is_active: true, role: session.role },
+    user: { id: session.userId, app_metadata: { role: session.role, hospital_id: session.hospitalId } },
+    profile: {
+      id: session.userId,
+      hospital_id: session.hospitalId,
+      display_name: session.displayName,
+      is_active: true,
+      must_change_password: session.mustChangePassword,
+      role: session.role,
+    },
   };
 }
