@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
+import {useCallback,useEffect,useMemo,useState} from "react";
 import {AccountManager} from "@/components/AccountManager";
 import {loadWorkspaceRecords,createWorkspaceRecord} from "@/app/workspace-actions";
 import Link from "next/link";
@@ -115,8 +115,8 @@ function displayValue(row:Record<string,unknown>,key:string){const v=row[key];if
 function ModulePage({kind,module,notice}:{kind:Kind;module:Mod;notice:(s:string)=>void}){
  const [term,setTerm]=useState(""),[rows,setRows]=useState<Record<string,unknown>[]>([]),[loading,setLoading]=useState(false),[saving,setSaving]=useState(false),[error,setError]=useState(""),[success,setSuccess]=useState(""),[form,setForm]=useState<Record<string,string>>({});
  const fields=fieldsFor(kind,module.id),supported=Boolean(columns[module.id]);
- async function refresh(){if(!supported)return;setLoading(true);setError("");try{setRows(await loadWorkspaceRecords(module.id) as Record<string,unknown>[]);}catch(e){setError(e instanceof Error?e.message:"Unable to load hospital records.");}finally{setLoading(false);}}
- useEffect(()=>{setTerm("");setForm({});setSuccess("");setError("");void refresh();},[module.id]);
+ const refresh=useCallback(async()=>{if(!supported)return;setLoading(true);setError("");try{setRows(await loadWorkspaceRecords(module.id) as Record<string,unknown>[]);}catch(e){setError(e instanceof Error?e.message:"Unable to load hospital records.");}finally{setLoading(false);}},[supported,module.id]);
+ useEffect(()=>{setTerm("");setForm({});setSuccess("");setError("");void refresh();},[module.id,refresh]);
  async function submit(e:React.FormEvent<HTMLFormElement>){e.preventDefault();setSaving(true);setError("");setSuccess("");try{const result=await createWorkspaceRecord(module.id,form);setSuccess(result.message);setForm({});await refresh();}catch(e){setError(e instanceof Error?e.message:"Unable to save record.");}finally{setSaving(false);}}
  const filtered=rows.filter(row=>Object.values(row).some(v=>String(v??"").toLowerCase().includes(term.toLowerCase())));
  if(module.id==="accounts"&&kind==="admin") return <AccountManager/>;
