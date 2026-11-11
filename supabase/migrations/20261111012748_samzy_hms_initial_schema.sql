@@ -48,13 +48,6 @@ AS $function$
 begin raise exception 'Clinical history is append-only; add an amendment instead.'; end $function$
 ;
 
-CREATE OR REPLACE FUNCTION app_private.set_updated_at()
- RETURNS trigger
- LANGUAGE plpgsql
- SET search_path TO ''
-AS $function$ begin new.updated_at := now(); return new; end $function$
-;
-
 create table public.admissions (
   id uuid default gen_random_uuid() not null,
   hospital_id uuid not null,
@@ -1180,22 +1173,6 @@ create policy wards_read on public.wards as permissive for select to authenticat
 CREATE TRIGGER medical_amendments_append_only BEFORE DELETE OR UPDATE ON medical_record_amendments FOR EACH ROW EXECUTE FUNCTION app_private.reject_clinical_history_mutation();
 
 CREATE TRIGGER medical_records_append_only BEFORE DELETE OR UPDATE ON medical_records FOR EACH ROW EXECUTE FUNCTION app_private.reject_clinical_history_mutation();
-
-CREATE TRIGGER trg_appointments_updated_at BEFORE UPDATE ON appointments FOR EACH ROW EXECUTE FUNCTION app_private.set_updated_at();
-
-CREATE TRIGGER trg_departments_updated_at BEFORE UPDATE ON departments FOR EACH ROW EXECUTE FUNCTION app_private.set_updated_at();
-
-CREATE TRIGGER trg_hospitals_updated_at BEFORE UPDATE ON hospitals FOR EACH ROW EXECUTE FUNCTION app_private.set_updated_at();
-
-CREATE TRIGGER trg_patient_insurance_updated_at BEFORE UPDATE ON patient_insurance FOR EACH ROW EXECUTE FUNCTION app_private.set_updated_at();
-
-CREATE TRIGGER trg_patients_updated_at BEFORE UPDATE ON patients FOR EACH ROW EXECUTE FUNCTION app_private.set_updated_at();
-
-CREATE TRIGGER trg_public_site_content_updated_at BEFORE UPDATE ON public_site_content FOR EACH ROW EXECUTE FUNCTION app_private.set_updated_at();
-
-CREATE TRIGGER trg_staff_directory_updated_at BEFORE UPDATE ON staff_directory FOR EACH ROW EXECUTE FUNCTION app_private.set_updated_at();
-
-CREATE TRIGGER trg_user_profiles_updated_at BEFORE UPDATE ON user_profiles FOR EACH ROW EXECUTE FUNCTION app_private.set_updated_at();
 
 revoke all on all tables in schema public from anon, authenticated;
 grant select, insert, update on all tables in schema public to authenticated;
