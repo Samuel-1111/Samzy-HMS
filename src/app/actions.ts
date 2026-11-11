@@ -50,7 +50,6 @@ export async function getPortalAccountSetupStatus() {
     staff: portalCredentialsStatus("staff"),
     patient: portalCredentialsStatus("patient"),
     hospitalWorkspaceConfigured,
-    cctvBridgeConfigured: Boolean(process.env.CCTV_DISCOVERY_BRIDGE_URL?.trim() && process.env.CCTV_DISCOVERY_BRIDGE_TOKEN?.trim()),
   };
 }
 
