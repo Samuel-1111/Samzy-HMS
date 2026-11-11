@@ -11,8 +11,8 @@ const internalAuthEmail = (username: string) => username.toLowerCase() + "@accou
 
 function configuredAdminCredentials() {
   return {
-    username: (process.env.admin_username ?? process.env.ADMIN_USERNAME ?? "").trim().toLowerCase(),
-    password: process.env.admin_password ?? process.env.ADMIN_PASSWORD ?? "",
+    username: (process.env.admin_username?.trim() || process.env.ADMIN_USERNAME?.trim() || "").trim().toLowerCase(),
+    password: process.env.admin_password || process.env.ADMIN_PASSWORD || "",
   };
 }
 
