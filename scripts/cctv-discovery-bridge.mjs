@@ -28,7 +28,6 @@ if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
   process.exit(1);
 }
 
-const escapeXml = (value) => String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 const tagText = (xml, tag) => {
   const match = xml.match(new RegExp("<(?:[\\w.-]+:)?"+tag+"(?:\\s[^>]*)?>([\\s\\S]*?)</(?:[\\w.-]+:)?"+tag+"\\s*>", "i"));
   return match?.[1]?.replace(/<[^>]*>/g, " ").replace(/\\s+/g, " ").trim() ?? "";
