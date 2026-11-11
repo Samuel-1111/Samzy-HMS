@@ -36,9 +36,13 @@ export async function getPortalAccountSetupStatus() {
   let hospitalWorkspaceConfigured = false;
   const hospitalId = process.env.HMS_HOSPITAL_ID?.trim() || "";
   if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(hospitalId)) {
-    const admin = createAdminClient();
-    const { data } = await admin.from("hospitals").select("id,status").eq("id", hospitalId).maybeSingle();
-    hospitalWorkspaceConfigured = data?.status === "active";
+    try {
+      const admin = createAdminClient();
+      const { data } = await admin.from("hospitals").select("id,status").eq("id", hospitalId).maybeSingle();
+      hospitalWorkspaceConfigured = data?.status === "active";
+    } catch {
+      hospitalWorkspaceConfigured = false;
+    }
   }
   return {
     admin: portalCredentialsStatus("admin"),
