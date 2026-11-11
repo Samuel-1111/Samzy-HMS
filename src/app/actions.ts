@@ -11,6 +11,7 @@ const internalAuthEmail = (username: string) => username.toLowerCase() + "@accou
 
 export async function signInPortal(role: PortalRole, username: string, password: string) {
   if (!["admin", "receptionist", "staff", "patient"].includes(role)) return { error: "Select a valid portal." };
+  if (role === "patient") return { error: "Individual patient accounts are not ready yet. Shared Patient Portal credentials are disabled to protect private medical records." };
   if (!username.trim() || !password) return { error: "Enter your username and password." };
   const status = portalCredentialsStatus(role);
   if (!status.configured) {
