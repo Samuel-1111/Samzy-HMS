@@ -25,3 +25,45 @@
 .metric-card:nth-child(4n+3){background:#eef9f3;border-color:#dcefe4}.metric-card:nth-child(4n+3) b{color:#23865b}
 .metric-card:nth-child(4n){background:#f5f1fc;border-color:#e8e0f5}.metric-card:nth-child(4n) b{color:#7e5aad}
 .metric-card span{color:#6f8292}.metric-card small{color:#778b9b}
+
+
+/* Secure system setup and locked portal screens */
+.setup-home,.portal-lock-page{min-height:100vh;background:radial-gradient(circle at 15% 5%,#eaf4f8 0,transparent 35%),#f5f8fa;color:#173247;padding:28px 6vw 34px}
+.setup-header{max-width:1120px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}
+.setup-brand,.portal-lock-brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:#173247}
+.setup-brand>span,.portal-lock-mark{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:#153e5a;color:white;font-size:20px;font-weight:900}
+.setup-brand b,.portal-lock-brand b{font-size:15px;letter-spacing:.09em}
+.setup-header>small,.portal-lock-brand small{font-size:9px;letter-spacing:.16em;color:#8193a1}
+.setup-hero{max-width:1120px;margin:100px auto 38px}
+.setup-eyebrow,.setup-panel-heading>div>span{font-size:10px;font-weight:800;letter-spacing:.18em;color:#397b9e}
+.setup-hero h1{font-size:clamp(42px,7vw,76px);letter-spacing:-.055em;margin:12px 0;color:#153e5a}
+.setup-hero p{max-width:650px;font-size:17px;line-height:1.75;color:#637989}
+.setup-state{display:inline-flex;align-items:center;gap:10px;margin-top:24px;padding:10px 14px;border:1px solid #cde5d9;border-radius:999px;background:#f0faf4;color:#26754e;font-size:10px;font-weight:800;letter-spacing:.1em}
+.setup-state i,.portal-lock-status span{width:8px;height:8px;border-radius:50%;background:#2a9b65;box-shadow:0 0 0 4px #d9f1e4}
+.setup-panel{max-width:1120px;margin:auto;background:white;border:1px solid #e2eaf0;border-radius:22px;padding:26px;box-shadow:0 18px 60px #183b5510}
+.setup-panel-heading{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.setup-panel-heading h2{font-size:24px;margin:8px 0 0}
+.setup-panel-heading>b{font-size:9px;letter-spacing:.12em;color:#276e9a;background:#edf6fb;padding:9px 12px;border-radius:999px}
+.setup-check-list{margin-top:20px}
+.setup-check{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:12px;align-items:center;padding:16px 0;border-top:1px solid #edf1f4}
+.setup-check>b{font-size:13px}.setup-check>small{font-size:11px;color:#7a8d9b}
+.setup-check-icon{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#f1f4f6;color:#8798a5}
+.setup-check-icon.done{background:#e8f7ef;color:#258657;font-weight:900}
+.setup-warning{margin:20px 0 0;padding:14px 16px;border-radius:12px;background:#fff7eb;color:#8a632c;font-size:12px;line-height:1.7}
+.setup-footer{max-width:1120px;margin:28px auto 0;color:#91a0aa;font-size:10px}
+.portal-lock-page{display:grid;place-items:center;padding:28px 16px}
+.portal-lock-card{width:min(100%,620px);background:white;border:1px solid #e2eaf0;border-radius:22px;padding:clamp(24px,5vw,42px);box-shadow:0 18px 60px #183b5510}
+.portal-lock-brand{margin-bottom:34px}.portal-lock-brand>span:last-child{display:grid;gap:4px}
+.portal-lock-status{display:flex;align-items:center;gap:10px;color:#9a6824;font-size:9px;font-weight:900;letter-spacing:.13em}
+.portal-lock-status span{background:#d99b39;box-shadow:0 0 0 4px #faefd9}
+.portal-lock-card h1{font-size:clamp(28px,5vw,40px);letter-spacing:-.04em;margin:16px 0 10px;color:#173b55}
+.portal-lock-lead{font-size:14px;line-height:1.75;color:#718391}
+.portal-lock-checks{margin:24px 0}
+.portal-lock-checks>div{display:flex;gap:12px;padding:13px 0;border-top:1px solid #edf1f4}
+.portal-lock-checks>div>span{display:grid;place-items:center;flex:0 0 24px;height:24px;border-radius:50%;background:#e8f7ef;color:#258657;font-weight:900}
+.portal-lock-checks>div:last-child>span,.portal-lock-checks>div:nth-last-child(2)>span{background:#f2f4f6;color:#8b9aa5}
+.portal-lock-checks section{display:grid;gap:4px}.portal-lock-checks b{font-size:12px;color:#29475c}
+.portal-lock-checks small{font-size:11px;line-height:1.6;color:#81919d}
+.portal-lock-note{padding:13px 15px;background:#f5f8fa;border-radius:10px;color:#6e808d;font-size:11px;line-height:1.7}
+.portal-lock-home{display:inline-block;margin-top:22px;color:#287aa4;font-size:12px;font-weight:800;text-decoration:none}
+@media(max-width:640px){.setup-home{padding:20px 16px}.setup-hero{margin:70px auto 28px}.setup-panel{padding:19px}.setup-check{grid-template-columns:28px 1fr}.setup-check>small{grid-column:2}.setup-header>small{font-size:8px}.setup-panel-heading{align-items:flex-start;flex-direction:column}}
