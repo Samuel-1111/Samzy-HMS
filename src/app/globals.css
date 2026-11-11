@@ -116,3 +116,14 @@ html[data-theme="dark"] .hms-avatar{background:#1d4056;color:#9dd9f3}html[data-t
 html[data-theme="dark"] .public-hms-art{filter:brightness(.78)}html[data-theme="dark"] .public-hms-float{background:#fff;color:#18364b}
 @media(max-width:850px){.public-hms-header{padding:0 20px}.public-hms-header nav{display:none}.public-hms-hero{grid-template-columns:1fr;padding:50px 24px;gap:25px}.public-hms-art{height:320px}.public-hms-section,.public-hms-contact{padding:55px 24px}.public-hms-about,.public-hms-contact{grid-template-columns:1fr;gap:25px}.public-hms-section-head{display:block}.public-hms-section-head>p{margin-top:14px}}
 @media(max-width:560px){.public-hms-header{height:auto;min-height:68px;gap:8px;padding:10px 13px}.public-hms-brand{grid-template-columns:33px auto;column-gap:7px}.public-hms-brand>span{width:33px;height:33px}.public-hms-brand b{font-size:10px}.public-hms-brand small{font-size:6px}.public-hms-actions{gap:6px}.public-hms-login{font-size:8px;padding:9px}.public-hms-hero{padding:44px 20px}.public-hms-copy h1{font-size:43px}.public-hms-trust{gap:10px}.public-hms-art{height:280px}.public-hms-band{padding:18px 10px}.public-hms-band>div{gap:5px;flex-direction:column;text-align:center}.public-hms-band b{font-size:16px}.public-hms-band span{font-size:8px}.public-hms-pillar-grid,.public-hms-portal-grid{grid-template-columns:1fr}.public-hms-section h2,.public-hms-contact h2{font-size:31px}.public-hms-footer{gap:12px;padding:20px}}
+
+
+.portal-lock-toolbar{display:flex;justify-content:flex-end;margin:-10px 0 16px}
+html[data-theme="dark"] .portal-lock-page{background:radial-gradient(circle at 15% 5%,#152b3b 0,transparent 35%),#0b1420;color:#e5eef5}
+html[data-theme="dark"] .portal-lock-card{background:#111f2d;border-color:#263b4d;box-shadow:0 18px 60px #0005}
+html[data-theme="dark"] .portal-lock-brand{color:#e5eef5}
+html[data-theme="dark"] .portal-lock-card h1{color:#e5eef5}
+html[data-theme="dark"] .portal-lock-lead,html[data-theme="dark"] .portal-lock-checks small{color:#9aafbf}
+html[data-theme="dark"] .login-form label{color:#c3d2dd}
+html[data-theme="dark"] .login-form input{background:#0b1824;border-color:#2a4052;color:#e5eef5}
+html[data-theme="dark"] .portal-lock-note{background:#172838;color:#a9bdcb}
