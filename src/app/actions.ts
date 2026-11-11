@@ -56,8 +56,8 @@ export async function signInPortal(identifier: string, password: string) {
 
     if (value.includes("@")) {
       credentials = { email: value.toLowerCase(), password };
-    } else if (/^[+0-9()\\s-]{8,20}$/.test(value)) {
-      const phone = value.replace(/[()\\s-]/g, "");
+    } else if (/^[+0-9()\s-]{8,20}$/.test(value)) {
+      const phone = value.replace(/[()\s-]/g, "");
       credentials = { phone: phone.startsWith("0") && phone.length === 11 ? "+234" + phone.slice(1) : phone.startsWith("234") ? "+" + phone : phone, password };
     } else {
       // Bootstrap is attempted before profile lookup so the first Admin does not
