@@ -24,7 +24,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       </header>
       <section className="hms-login-layout">
         <aside className="hms-login-building-card">
-          <img src="https://coxwellhospital.com/_nuxt/hospital-building-view.CuHOeUg9.webp" alt="Hospital building" />
+          <div className="hms-login-neutral-building" aria-hidden="true"><span>✚</span><b>HOSPITAL</b><i>CARE · SERVICE · EXCELLENCE</i></div>
           <div className="hms-login-building-overlay" />
           <div className="hms-login-building-copy">
             <span>HOSPITAL MANAGEMENT SYSTEM</span>
