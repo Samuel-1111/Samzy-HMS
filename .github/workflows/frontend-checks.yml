@@ -4,6 +4,7 @@ on:
     branches: ["**"]
   pull_request:
     branches: ["main"]
+  workflow_dispatch:
 permissions:
   contents: write
 concurrency:
@@ -20,7 +21,7 @@ jobs:
         with:
           node-version: 22
       - name: Install dependencies
-        run: npm install
+        run: npm ci
       - name: Apply compatible dependency security fixes
         run: npm audit fix
       - name: Summarize dependency audit
