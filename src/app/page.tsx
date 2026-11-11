@@ -60,11 +60,9 @@ export default function Home() {
           </div>
           <div className="coxwell-hero-proof"><span>✚ Patient-centred care</span><span>◈ Specialist services</span><span>♡ Family health</span></div>
         </div>
-        <div className="coxwell-hero-visual" aria-label="Hospital care illustration">
-          <div className="coxwell-visual-glow" />
-          <div className="coxwell-visual-ring ring-one" />
-          <div className="coxwell-visual-ring ring-two" />
-          <div className="coxwell-visual-cross">✚</div>
+        <div className="coxwell-hero-visual" aria-label="Coxwell Specialist Hospital">
+          <img className="coxwell-building-photo" src="https://coxwellhospital.com/_nuxt/hospital-building-view.CuHOeUg9.webp" alt="Coxwell Specialist Hospital building" />
+          <div className="coxwell-photo-shade" />
           <div className="coxwell-visual-card"><small>COXWELL SPECIALIST HOSPITAL</small><b>Passion to care.<br />Skill to heal.</b><span>Professional · Compassionate · Affordable</span></div>
           <div className="coxwell-visual-note"><span>✓</span><div><b>Care for every family</b><small>Personalised healthcare support</small></div></div>
         </div>
