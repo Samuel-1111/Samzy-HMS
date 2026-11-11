@@ -41,7 +41,7 @@ Role and tenant claims are assigned only by trusted server-side provisioning in 
 
 ## Local setup
 
-Requires Node.js 20.9+ and npm.
+Requires Node.js 22+ and npm.
 
     npm install
     cp .env.example .env.local
