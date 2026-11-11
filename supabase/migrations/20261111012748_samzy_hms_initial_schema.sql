@@ -1,8 +1,59 @@
 -- Generated from the applied Samzy HMS Supabase migration.
--- This file mirrors the live schema; it contains no INSERT statements or seed data.
+-- Functions precede policies; this file mirrors the live schema and contains no seed data.
 create schema if not exists app_private;
 revoke all on schema app_private from public, anon;
 grant usage on schema app_private to authenticated;
+
+CREATE OR REPLACE FUNCTION app_private.current_hospital_id()
+ RETURNS uuid
+ LANGUAGE sql
+ STABLE
+ SET search_path TO ''
+AS $function$ select nullif(auth.jwt()->'app_metadata'->>'hospital_id','')::uuid $function$
+;
+
+CREATE OR REPLACE FUNCTION app_private."current_role"()
+ RETURNS text
+ LANGUAGE sql
+ STABLE
+ SET search_path TO ''
+AS $function$ select coalesce(auth.jwt()->'app_metadata'->>'role','') $function$
+;
+
+CREATE OR REPLACE FUNCTION app_private.has_role(allowed text[])
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE
+ SET search_path TO ''
+AS $function$ select app_private.current_role() = any(allowed) $function$
+;
+
+CREATE OR REPLACE FUNCTION app_private.owns_patient(target_patient_id uuid)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ STABLE
+ SET search_path TO ''
+AS $function$
+begin
+ return exists(select 1 from public.patients p where p.id=target_patient_id
+   and p.auth_user_id=auth.uid() and p.hospital_id=app_private.current_hospital_id());
+end $function$
+;
+
+CREATE OR REPLACE FUNCTION app_private.reject_clinical_history_mutation()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
+begin raise exception 'Clinical history is append-only; add an amendment instead.'; end $function$
+;
+
+CREATE OR REPLACE FUNCTION app_private.set_updated_at()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$ begin new.updated_at := now(); return new; end $function$
+;
 
 create table public.admissions (
   id uuid default gen_random_uuid() not null,
@@ -1125,57 +1176,6 @@ create policy vitals_staff_read on public.vitals as permissive for select to aut
 create policy wards_manage on public.wards as permissive for all to authenticated using (((hospital_id = app_private.current_hospital_id()) AND app_private.has_role(ARRAY['admin'::text, 'receptionist'::text]))) with check (((hospital_id = app_private.current_hospital_id()) AND app_private.has_role(ARRAY['admin'::text, 'receptionist'::text])));
 
 create policy wards_read on public.wards as permissive for select to authenticated using (((hospital_id = app_private.current_hospital_id()) AND app_private.has_role(ARRAY['admin'::text, 'receptionist'::text, 'staff'::text])));
-
-CREATE OR REPLACE FUNCTION app_private.current_hospital_id()
- RETURNS uuid
- LANGUAGE sql
- STABLE
- SET search_path TO ''
-AS $function$ select nullif(auth.jwt()->'app_metadata'->>'hospital_id','')::uuid $function$
-;
-
-CREATE OR REPLACE FUNCTION app_private."current_role"()
- RETURNS text
- LANGUAGE sql
- STABLE
- SET search_path TO ''
-AS $function$ select coalesce(auth.jwt()->'app_metadata'->>'role','') $function$
-;
-
-CREATE OR REPLACE FUNCTION app_private.has_role(allowed text[])
- RETURNS boolean
- LANGUAGE sql
- STABLE
- SET search_path TO ''
-AS $function$ select app_private.current_role() = any(allowed) $function$
-;
-
-CREATE OR REPLACE FUNCTION app_private.owns_patient(target_patient_id uuid)
- RETURNS boolean
- LANGUAGE plpgsql
- STABLE
- SET search_path TO ''
-AS $function$
-begin
- return exists(select 1 from public.patients p where p.id=target_patient_id
-   and p.auth_user_id=auth.uid() and p.hospital_id=app_private.current_hospital_id());
-end $function$
-;
-
-CREATE OR REPLACE FUNCTION app_private.reject_clinical_history_mutation()
- RETURNS trigger
- LANGUAGE plpgsql
- SET search_path TO ''
-AS $function$
-begin raise exception 'Clinical history is append-only; add an amendment instead.'; end $function$
-;
-
-CREATE OR REPLACE FUNCTION app_private.set_updated_at()
- RETURNS trigger
- LANGUAGE plpgsql
- SET search_path TO ''
-AS $function$ begin new.updated_at := now(); return new; end $function$
-;
 
 CREATE TRIGGER medical_amendments_append_only BEFORE DELETE OR UPDATE ON medical_record_amendments FOR EACH ROW EXECUTE FUNCTION app_private.reject_clinical_history_mutation();
 
