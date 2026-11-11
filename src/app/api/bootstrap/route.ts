@@ -27,8 +27,11 @@ type BootstrapPayload = {
 function isAuthorized(request: NextRequest) {
   const expected = process.env.HMS_BOOTSTRAP_TOKEN ?? "";
   const supplied = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
-  if (!expected || supplied.length !== expected.length) return false;
-  return timingSafeEqual(Buffer.from(supplied), Buffer.from(expected));
+  if (!expected || expected.length < 32) return false;
+  const suppliedBytes = Buffer.from(supplied);
+  const expectedBytes = Buffer.from(expected);
+  if (suppliedBytes.length !== expectedBytes.length) return false;
+  return timingSafeEqual(suppliedBytes, expectedBytes);
 }
 
 export async function POST(request: NextRequest) {
