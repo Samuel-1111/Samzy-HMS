@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { bootstrapHospital } from "@/lib/supabase/bootstrap";
+import type { Json } from "@/types/database";
 
 export const dynamic = "force-dynamic";
 
@@ -12,12 +13,14 @@ type BootstrapPayload = {
   timezone?: string;
   phone?: string;
   email?: string;
-  address?: Record<string, unknown>;
+  address?: Json;
   initialAdmin?: {
     displayName?: string;
     password?: string;
     email?: string;
     phone?: string;
+    emailVerified?: boolean;
+    phoneVerified?: boolean;
   };
 };
 
@@ -61,6 +64,9 @@ export async function POST(request: NextRequest) {
     if (!payload.initialAdmin?.email && !payload.initialAdmin?.phone) {
       return NextResponse.json({ error: "Initial administrator email or phone is required." }, { status: 400 });
     }
+    if (!(payload.initialAdmin.email && payload.initialAdmin.emailVerified) && !(payload.initialAdmin.phone && payload.initialAdmin.phoneVerified)) {
+      return NextResponse.json({ error: "Verify the initial administrator contact outside the system before activating the account." }, { status: 400 });
+    }
     if ((payload.initialAdmin.password ?? "").length < 12) {
       return NextResponse.json({ error: "Use an initial administrator password of at least 12 characters." }, { status: 400 });
     }
@@ -81,6 +87,8 @@ export async function POST(request: NextRequest) {
         password: payload.initialAdmin!.password!,
         email: payload.initialAdmin!.email,
         phone: payload.initialAdmin!.phone,
+        emailVerified: payload.initialAdmin!.emailVerified,
+        phoneVerified: payload.initialAdmin!.phoneVerified,
       },
     });
 
