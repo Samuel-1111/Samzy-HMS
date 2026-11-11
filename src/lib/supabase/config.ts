@@ -1,8 +1,7 @@
-// Browser and SSR clients require a NEXT_PUBLIC_ URL because the browser
-// cannot read server-only SUPABASE_URL. The publishable key is explicitly
-// exposed by next.config.ts because it is designed to be public.
+// The server can use SUPABASE_URL; NEXT_PUBLIC_SUPABASE_URL remains supported
+// for deployments that already expose the URL to the browser.
 export const supabaseConfig = {
-  url: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+  url: process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "",
   publishableKey: process.env.SUPABASE_PUBLISHABLE_KEY ?? "",
 };
 
