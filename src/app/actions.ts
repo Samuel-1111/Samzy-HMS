@@ -80,7 +80,8 @@ export async function signInPortal(identifier: string, password: string) {
           .select("email,phone,login_username,is_active")
           .eq("login_username", value.toLowerCase()).maybeSingle();
 
-        if (error || !profile || !profile.is_active) return { error: "Invalid username or password." };
+        if (error) throw new Error("HMS_PROFILE_LOOKUP_FAILED");
+        if (!profile || !profile.is_active) return { error: "Invalid username or password." };
         credentials = profile.email ? { email: profile.email, password }
           : profile.phone ? { phone: profile.phone, password }
           : { email: internalAuthEmail(profile.login_username ?? value), password };
@@ -88,7 +89,11 @@ export async function signInPortal(identifier: string, password: string) {
     }
 
     const { error: signInError } = await supabase.auth.signInWithPassword(credentials);
-    if (signInError) return { error: "Invalid username or password." };
+    if (signInError) {
+      if (signInError.status === 400 || signInError.status === 401) return { error: "Invalid username or password." };
+      console.error("[HMS_AUTH] provider_sign_in_failed", { status: signInError.status, code: signInError.code ?? "UNKNOWN" });
+      return { error: "Sign-in is temporarily unavailable. Please try again shortly." };
+    }
 
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
