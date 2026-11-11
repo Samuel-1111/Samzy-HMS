@@ -1,46 +1,28 @@
 import Link from "next/link";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { hospital } from "@/lib/hospital";
 
-const checks = [
-  ["Database schema", "44 tables provisioned", "done"],
-  ["Row-level security", "Enabled on all public tables", "done"],
-  ["Supabase SSR authentication", "Integration code added", "done"],
-  ["Hospital tenant and user accounts", "Not configured", "pending"],
-  ["Clinical workflows and acceptance tests", "Pending implementation", "pending"],
+const pillars=[
+ {icon:"✚",title:"Care centred on people",text:"A welcoming digital front door designed to make it easier to connect with the hospital team."},
+ {icon:"◈",title:"Connected care teams",text:"A coordinated workspace for authorised hospital teams and the services they support."},
+ {icon:"▣",title:"Your information matters",text:"Patient information is protected through role-based access and privacy-conscious workflows."}
 ];
-
-export default function Home() {
-  return (
-    <main className="setup-home">
-      <header className="setup-header">
-        <Link href="/" className="setup-brand"><span>S</span><b>SAMZY HMS</b></Link>
-        <small>BUILT BY SAMZY TECHNOLOGY</small>
-      </header>
-      <section className="setup-hero">
-        <div className="setup-eyebrow">HOSPITAL OPERATIONS PLATFORM</div>
-        <h1>Samzy HMS</h1>
-        <p>A secure, configurable foundation for hospital administration, reception, clinical teams and patient services.</p>
-        <div className="setup-state"><i /> DATABASE FOUNDATION PROVISIONED</div>
-        <Link href="/login" className="setup-login-link">Secure sign in <span>↗</span></Link>
-      </section>
-      <section className="setup-panel">
-        <div className="setup-panel-heading">
-          <div><span>IMPLEMENTATION STATUS</span><h2>System readiness</h2></div>
-          <b>EMPTY DATABASE</b>
-        </div>
-        <div className="setup-check-list">
-          {checks.map(([name, status, state]) => (
-            <div className="setup-check" key={name}>
-              <span className={state === "done" ? "setup-check-icon done" : "setup-check-icon"}>{state === "done" ? "✓" : "○"}</span>
-              <b>{name}</b><small>{status}</small>
-            </div>
-          ))}
-        </div>
-        <p className="setup-warning">
-          No hospital tenant or user accounts have been created. Portal access is available only to provisioned,
-          authorised accounts. Clinical workflows remain locked until hospital configuration and acceptance tests pass.
-        </p>
-      </section>
-      <footer className="setup-footer">Samzy HMS · Built by Samzy Technology · Not yet approved for clinical production use</footer>
-    </main>
-  );
+const portals=[
+ {name:"Admin Portal",desc:"Hospital configuration, operations and oversight.",href:"/login",icon:"⚙"},
+ {name:"Reception Portal",desc:"Patient registration, appointments and front-desk services.",href:"/login",icon:"▤"},
+ {name:"Staff Portal",desc:"Shared clinical workspace for authorised staff.",href:"/login",icon:"✚"},
+ {name:"Patient Portal",desc:"Appointments, released results and patient services.",href:"/login",icon:"♙"}
+];
+export default function Home(){
+ const name=hospital.name;
+ return <main className="public-hms">
+  <header className="public-hms-header"><Link href="/" className="public-hms-brand"><span>S</span><b>{name}</b><small>HOSPITAL SERVICES</small></Link><nav><a href="#about">About</a><a href="#services">Our approach</a><a href="#portals">Patient & staff access</a></nav><div className="public-hms-actions"><ThemeToggle/><Link href="/login" className="public-hms-login">Portal sign in ↗</Link></div></header>
+  <section className="public-hms-hero"><div className="public-hms-copy"><span className="public-hms-kicker"><i/> HOSPITAL INFORMATION & DIGITAL SERVICES</span><h1>Care that puts <em>people</em> first.</h1><p>A simple, secure way to connect with hospital services, access authorised patient information and stay informed throughout your care journey.</p><div className="public-hms-cta"><a href="#portals" className="public-hms-primary">Explore portal access <span>→</span></a><a href="#about" className="public-hms-secondary">Learn about the platform</a></div><div className="public-hms-trust"><span>◈ &nbsp;Privacy-conscious access</span><span>✚ &nbsp;Connected care teams</span><span>⌁ &nbsp;Clear communication</span></div></div><div className="public-hms-art"><div className="public-hms-art-ring ring-a"/><div className="public-hms-art-ring ring-b"/><div className="public-hms-cross">✚</div><div className="public-hms-art-caption"><small>CONNECTED HOSPITAL SERVICES</small><b>One secure workspace.<br/>A clearer care journey.</b></div><div className="public-hms-float"><span>✓</span><div><b>Secure access</b><small>Authorised information only</small></div></div></div></section>
+  <section className="public-hms-band"><div><b>01</b><span>Patient-centred<br/>digital services</span></div><div><b>02</b><span>Role-based<br/>staff access</span></div><div><b>03</b><span>Connected<br/>hospital workflows</span></div></section>
+  <section className="public-hms-section public-hms-about" id="about"><div><span className="public-hms-kicker">ABOUT THE PLATFORM</span><h2>A more connected<br/><em>hospital experience.</em></h2></div><div><p>{name} is presented through a secure digital workspace designed to support hospital administration, reception, authorised clinical teams and patients.</p><p>Hospital-specific information, approved service listings, contact details and policies will appear here once the hospital profile has been formally configured.</p><Link href="/login" className="public-hms-text-link">Access the secure workspace →</Link></div></section>
+  <section className="public-hms-section public-hms-pillars" id="services"><div className="public-hms-section-head"><div><span className="public-hms-kicker">A CONNECTED EXPERIENCE</span><h2>Designed around<br/><em>what matters.</em></h2></div><p>Purpose-built tools to help patients and authorised teams navigate the hospital experience with clarity.</p></div><div className="public-hms-pillar-grid">{pillars.map(p=><article key={p.title}><span>{p.icon}</span><h3>{p.title}</h3><p>{p.text}</p></article>)}</div></section>
+  <section className="public-hms-section public-hms-portals" id="portals"><div className="public-hms-section-head"><div><span className="public-hms-kicker">SECURE PORTAL ACCESS</span><h2>One platform.<br/><em>Dedicated workspaces.</em></h2></div><p>Choose the access point that matches your role. Your account permissions determine the information and actions available to you.</p></div><div className="public-hms-portal-grid">{portals.map(p=><Link href={p.href} key={p.name}><span>{p.icon}</span><div><b>{p.name}</b><small>{p.desc}</small></div><i>↗</i></Link>)}</div></section>
+  <section className="public-hms-contact"><div><span className="public-hms-kicker">GETTING STARTED</span><h2>Need help accessing<br/><em>your portal?</em></h2><p>For account access, appointment enquiries and administrative assistance, contact the hospital through its approved communication channels.</p></div><div className="public-hms-contact-card"><span>SECURE ACCESS</span><b>Hospital portal sign in</b><p>Use the credentials provided by the hospital. Patient information is visible only when it has been authorised for release.</p><Link href="/login">Continue to sign in ↗</Link></div></section>
+  <footer className="public-hms-footer"><Link href="/" className="public-hms-brand"><span>S</span><b>{name}</b></Link><small>Digital hospital services powered by Samzy HMS</small><small>Built by Samzy Technology</small><small>Hospital details and public service information are subject to formal configuration and approval.</small></footer>
+ </main>;
 }
