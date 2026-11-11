@@ -1,0 +1,1 @@
+import {PortalShell} from "@/components/PortalShell"; export default function PatientPage(){return <PortalShell kind="patient"/>;}

@@ -1,0 +1,1 @@
+import {PortalShell} from "@/components/PortalShell"; export default function ReceptionPage(){return <PortalShell kind="reception"/>;}
