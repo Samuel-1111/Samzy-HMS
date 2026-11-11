@@ -15,9 +15,13 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - name: Install dependencies
         run: npm install
+      - name: Summarize dependency audit
+        run: |
+          npm audit --json > /tmp/npm-audit.json || true
+          node -e 'const a=require("/tmp/npm-audit.json"); console.log("AUDIT SUMMARY", JSON.stringify(a.metadata?.vulnerabilities ?? {})); for (const [name,v] of Object.entries(a.vulnerabilities ?? {})) console.log(name, JSON.stringify({severity:v.severity,range:v.range,fixAvailable:v.fixAvailable,via:v.via.map(x=>typeof x==="string"?x:{name:x.name,title:x.title,range:x.range})}));'
       - name: Commit generated npm lockfile
         if: github.event_name == 'push' && github.ref != 'refs/heads/main'
         run: |
