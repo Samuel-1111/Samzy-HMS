@@ -32,7 +32,7 @@ export function AccountManager(){
   setError("");setSuccess("");setIssued(null);
   try{
    const result=await managePortalAccount({profileId,operation});
-   if("temporaryPassword" in result) setIssued({username:result.username,temporaryPassword:result.temporaryPassword,role:"account"});
+   if("temporaryPassword" in result && typeof result.temporaryPassword === "string") setIssued({username:"username" in result ? String(result.username ?? "") : "",temporaryPassword:result.temporaryPassword,role:"account"});
    setSuccess(operation==="reset_password"?"New temporary password generated. Share it securely; the user must change it at next login.":operation==="suspend"?"Account suspended.":"Account reactivated.");
    await refresh();
   }catch(e){setError(e instanceof Error?e.message:"Account update failed.");}
