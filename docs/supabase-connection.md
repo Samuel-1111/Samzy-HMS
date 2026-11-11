@@ -20,6 +20,12 @@ Set these values in local `.env.local` and the Vercel project:
 
 The publishable key is intentionally public. RLS is the security boundary; a publishable key is not an authorisation mechanism.
 
+## Application authentication
+
+The repository now contains typed Supabase browser/server clients using `@supabase/ssr`, session-refresh middleware, server-side role/profile guards, a password sign-in page and a server-only administrative client. The portal pages reject unauthenticated users and verify the user's active profile against signed `app_metadata`.
+
+The app does not provide public self-registration. `supabase/config.toml` disables signup for local Supabase configuration; the remote project's Auth provider settings still need to be reviewed in the Supabase dashboard before launch. Email/SMS confirmation and delivery providers are not yet configured.
+
 ## Identity claims
 
 RLS policies require signed Auth `app_metadata` values:
